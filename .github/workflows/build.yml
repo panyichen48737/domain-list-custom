@@ -45,8 +45,8 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          release_name: release
-          tag: release
+          asset_name: release
+          tag: ${{ github.ref }}
           overwrite: true
           body: "域名列表"
           file: ./publish/*

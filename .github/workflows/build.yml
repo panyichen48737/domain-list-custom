@@ -34,7 +34,7 @@ jobs:
       - name: Append attribute rules
         run: |
           echo "include:geolocation-!cn @cn" >> ./community/data/cn
-          echo "include:cn @!cn" >> ./community/data/geolocation-\!cn
+          echo "include:geolocation-cn @!cn" >> ./community/data/geolocation-\!cn
 
       - name: Generate `clash` geosite.dat
         run: |

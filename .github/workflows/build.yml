@@ -53,6 +53,12 @@ jobs:
           repository: v2fly/domain-list-community
           path: community
 
+      - name: Checkout cokebar/gfwlist2dnsmasq
+        uses: actions/checkout@v4
+        with:
+          repository: cokebar/gfwlist2dnsmasq
+          path: gfwlist2dnsmasq
+
       - name: Append attribute rules
         run: |
           echo "include:geolocation-!cn @cn" >> ./community/data/cn
@@ -163,7 +169,10 @@ jobs:
 
       - name: Generate proxy
         run: |
-          grep 'full:' ./publish/geolocation-\!cn.txt | sed 's/^full:/DOMAIN,/' | sed 's/:@\!cn$//' > ./tmp/temp-proxy.txt
+          chmod +x ./gfwlist2dnsmasq/gfwlist2dnsmasq.sh
+          ./gfwlist2dnsmasq/gfwlist2dnsmasq.sh -l -o ./tmp/temp-proxy.txt
+          sed -i 's/^/DOMAIN-SUFFIX,/' ./tmp/temp-proxy.txt
+          grep 'full:' ./publish/geolocation-\!cn.txt | sed 's/^full:/DOMAIN,/' | sed 's/:@\!cn$//' >> ./tmp/temp-proxy.txt
           grep 'domain:' ./publish/geolocation-\!cn.txt | sed 's/^domain:/DOMAIN-SUFFIX,/' | sed 's/:@\!cn$//' >> ./tmp/temp-proxy.txt
           grep 'keyword:' ./publish/geolocation-\!cn.txt | sed 's/^keyword:/DOMAIN-KEYWORD,/' | sed 's/:@\!cn$//' >> ./tmp/temp-proxy.txt
           curl -sSL ${proxy} | grep -Ev '#|IP-CIDR' | sed '/^\s*$/d' >> ./tmp/temp-proxy.txt

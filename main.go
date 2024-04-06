@@ -17,7 +17,6 @@ var (
 	outputPath   = flag.String("outputpath", "./publish", "Output path to the generated files")
 	exportLists  = flag.String("exportlists", "private,microsoft,category-games,speedtest,cn,geolocation-!cn", "Lists to be exported in plaintext format, separated by ',' comma")
 	excludeAttrs = flag.String("excludeattrs", "cn@!cn@ads,geolocation-!cn@cn@ads", "Exclude rules with certain attributes in certain lists, seperated by ',' comma, support multiple attributes in one list. Example: geolocation-!cn@cn@ads,geolocation-cn@!cn")
-	toGFWList    = flag.String("togfwlist", "geolocation-!cn", "List to be exported in GFWList format")
 )
 
 func main() {
@@ -85,10 +84,6 @@ func main() {
 			os.Exit(1)
 		}
 		if err := os.MkdirAll(*outputPath, 0755); err != nil {
-			fmt.Println("Failed:", err)
-			os.Exit(1)
-		}
-		if err := ioutil.WriteFile(filepath.Join(*outputPath, *datName), protoBytes, 0644); err != nil {
 			fmt.Println("Failed:", err)
 			os.Exit(1)
 		}

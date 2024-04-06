@@ -39,35 +39,35 @@ jobs:
       - name: Generate `clash` geosite.dat
         run: |
           go run ./ --datapath=./community/data
-          rm -f ./publish/*.dat
+          rm -f ./domains/*.dat
 
       - name: Release and upload assets
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          release_name: release
-          tag: release
+          release_name: domains
+          tag: domains
           overwrite: false
           body: "域名列表"
           file_glob: true
-          file: ./publish/*
+          file: ./domains/*
 
       - name: Git push assets to `domains` branch
         run: |
-          cd ./publish/ || exit 1
+          cd ./domains/ || exit 1
           git init
           git config --local user.name "github-actions[bot]"
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -b release
+          git checkout -b domains
           git add . && git commit -m "域名列表更新于 ${update_version}"
           git remote add origin "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
-          git push -f -u origin release
+          git push -f -u origin domains
 
       - name: Purge jsDelivr CDN
         run: |
-          cd ./publish/ || exit 1
+          cd ./domains/ || exit 1
           for file in $(ls); do
-            curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@publish/${file}"
+            curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@domains/${file}"
           done
   
       - name: Delete old workflow runs

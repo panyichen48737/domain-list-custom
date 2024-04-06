@@ -39,22 +39,11 @@ jobs:
       - name: Generate `clash` geosite.dat
         run: |
           go run ./ --datapath=./community/data
-          rm -f ./domains/*.dat
-
-      - name: Release and upload assets
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          release_name: domains
-          tag: domains
-          overwrite: false
-          body: "域名列表"
-          file_glob: true
-          file: ./domains/*
+          rm -f ./publish/*.dat
 
       - name: Git push assets to `domains` branch
         run: |
-          cd ./domains/ || exit 1
+          cd ./publish/ || exit 1
           git init
           git config --local user.name "github-actions[bot]"
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -65,7 +54,7 @@ jobs:
 
       - name: Purge jsDelivr CDN
         run: |
-          cd ./domains/ || exit 1
+          cd ./publish/ || exit 1
           for file in $(ls); do
             curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@domains/${file}"
           done

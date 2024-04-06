@@ -39,6 +39,7 @@ jobs:
       - name: Generate `clash` geosite.dat
         run: |
           go run ./ --datapath=./community/data
+          rm -f ./publish/*.dat
 
       - name: Release and upload `release` assets
         uses: svenstaro/upload-release-action@v2

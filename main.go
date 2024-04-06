@@ -13,6 +13,7 @@ import (
 )
 
 var (
+	dataPath     = flag.String("datapath", filepath.Join("./", "data"), "Path to your custom 'data' directory")
 	outputPath   = flag.String("outputpath", "./publish", "Output path to the generated files")
 	exportLists  = flag.String("exportlists", "private,microsoft@cn,category-games@cn,speedtest,cn,geolocation-!cn", "Lists to be exported in plaintext format, separated by ',' comma")
 	excludeAttrs = flag.String("excludeattrs", "cn@!cn@ads,geolocation-!cn@cn@ads", "Exclude rules with certain attributes in certain lists, seperated by ',' comma, support multiple attributes in one list. Example: geolocation-!cn@cn@ads,geolocation-cn@!cn")

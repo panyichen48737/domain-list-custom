@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/base64"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -107,25 +106,6 @@ func main() {
 			} else {
 				fmt.Printf("%s has been generated successfully in '%s'.\n", filename, *outputPath)
 			}
-		}
-	} else {
-		fmt.Println("Failed:", err)
-		os.Exit(1)
-	}
-
-	// Generate gfwlist.txt
-	if gfwlistBytes, err := listInfoMap.ToGFWList(*toGFWList); err == nil {
-		if f, err := os.OpenFile(filepath.Join(*outputPath, "gfwlist.txt"), os.O_RDWR|os.O_CREATE, 0644); err != nil {
-			fmt.Println("Failed:", err)
-			os.Exit(1)
-		} else {
-			encoder := base64.NewEncoder(base64.StdEncoding, f)
-			defer encoder.Close()
-			if _, err := encoder.Write(gfwlistBytes); err != nil {
-				fmt.Println("Failed:", err)
-				os.Exit(1)
-			}
-			fmt.Printf("gfwlist.txt has been generated successfully in '%s'.\n", *outputPath)
 		}
 	} else {
 		fmt.Println("Failed:", err)

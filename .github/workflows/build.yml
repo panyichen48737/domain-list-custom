@@ -75,7 +75,16 @@ jobs:
 
       - name: Generate private
         run: |
-          grep 'full:' ./publish/private.txt | sed 's/^full:/DOMAIN,/' > ./tmp/temp-private.txt
+          cat <<EOF > ./tmp/temp-private.txt
+          DOMAIN,clash.razord.top
+          DOMAIN,clash.metacubex.one
+          DOMAIN,yacd.haishan.me
+          DOMAIN,yacd.metacubex.one
+          DOMAIN,d.metacubex.one
+          DOMAIN,metacubex.github.io
+          DOMAIN,metacubexd.pages.dev
+          EOF
+          grep 'full:' ./publish/private.txt | sed 's/^full:/DOMAIN,/' >> ./tmp/temp-private.txt
           grep 'domain:' ./publish/private.txt | sed 's/^domain:/DOMAIN-SUFFIX,/' >> ./tmp/temp-private.txt
           grep 'keyword:' ./publish/private.txt | sed 's/^keyword:/DOMAIN-KEYWORD,/' >> ./tmp/temp-private.txt
           curl -sSL ${private1} | grep -Ev '#|IP-CIDR' | sed '/^\s*$/d' >> ./tmp/temp-private.txt
@@ -156,7 +165,13 @@ jobs:
 
       - name: Generate networktest
         run: |
-          grep 'full:' ./publish/speedtest.txt | sed 's/^full:/DOMAIN,/' > ./tmp/temp-networktest.txt
+          cat <<EOF > ./tmp/temp-networktest.txt
+          DOMAIN-KEYWORD,ipv6-test
+          DOMAIN-KEYWORD,ipv6test
+          DOMAIN-KEYWORD,test-ipv6
+          DOMAIN-KEYWORD,testipv6
+          EOF
+          grep 'full:' ./publish/speedtest.txt | sed 's/^full:/DOMAIN,/' >> ./tmp/temp-networktest.txt
           grep 'domain:' ./publish/speedtest.txt | sed 's/^domain:/DOMAIN-SUFFIX,/' >> ./tmp/temp-networktest.txt
           grep 'keyword:' ./publish/speedtest.txt | sed 's/^keyword:/DOMAIN-KEYWORD,/' >> ./tmp/temp-networktest.txt
           curl -sSL ${networktest} | grep -Ev '#|IP-CIDR' | sed '/^\s*$/d' >> ./tmp/temp-networktest.txt

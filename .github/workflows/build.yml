@@ -1,8 +1,8 @@
-name: Build geosite.dat
+name: Build domains
 on:
   workflow_dispatch:
   schedule:
-    - cron: "30 21 * * *"
+    - cron: "0 18 * * *"
   push:
     branches:
       - master
@@ -12,74 +12,53 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Compare latest tags and set variables
-        run: |
-          upstreamLatestTag=$(curl -sSL --connect-timeout 5 --retry 5 -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/v2fly/domain-list-community/releases/latest | grep "tag_name" | cut -d\" -f4)
-          thisLatestTag=$(curl -sSL --connect-timeout 5 --retry 5 -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/${{ github.repository }}/releases/latest | grep "tag_name" | cut -d\" -f4)
-          if [[ $upstreamLatestTag != $thisLatestTag ]]; then
-            echo "NeedToSync=true" >> $GITHUB_ENV
-          fi
-          echo "RELEASE_NAME=$upstreamLatestTag" >> $GITHUB_ENV
-          echo "TAG_NAME=$upstreamLatestTag" >> $GITHUB_ENV
-        shell: bash
-
       - name: Checkout codebase
-        uses: actions/checkout@v4
-        if: ${{ env.NeedToSync }}
+        uses: actions/checkout@master
 
       - name: Setup Go
         uses: actions/setup-go@v5
-        if: ${{ env.NeedToSync }}
         with:
           go-version-file: ./go.mod
 
       - name: Checkout v2fly/domain-list-community
-        if: ${{ env.NeedToSync }}
         uses: actions/checkout@v4
         with:
           repository: v2fly/domain-list-community
-          path: domain-list-community
+          path: community
 
       - name: Append attribute rules
-        if: ${{ env.NeedToSync }}
         run: |
-          echo "include:geolocation-!cn @cn" >> ./domain-list-community/data/cn
-          echo "include:geolocation-cn @!cn" >> ./domain-list-community/data/geolocation-\!cn
+          echo "include:geolocation-!cn @cn" >> ./community/data/cn
+          echo "include:cn @!cn" >> ./community/data/geolocation-\!cn
 
-      - name: Get dependencies and run
-        if: ${{ env.NeedToSync }}
+      - name: Generate `clash` geosite.dat
         run: |
-          go run ./ --datapath=./domain-list-community/data
+          go run ./ --datapath=./community/data
 
-      - name: Generate sha256 hashsum
-        if: ${{ env.NeedToSync }}
+      - name: Git push assets to `domains` branch
         run: |
-          cd publish || exit 1
-          sha256sum geosite.dat > geosite.dat.sha256sum
-
-      - name: Git push assets to "release" branch
-        if: ${{ env.NeedToSync }}
-        run: |
-          cd publish || exit 1
+          echo "update_version=$(date -d '+8 hours' +%Y-%m-%d)" >> ${GITHUB_ENV}
+          cd ./publish/ || exit 1
           git init
           git config --local user.name "github-actions[bot]"
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -b release
+          git checkout -b domains
           git add .
-          git commit -m "${{ env.RELEASE_NAME }}"
+          git commit -m "域名列表更新于 ${update_version}"
           git remote add publish "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
-          git push -f publish release
+          git push -f publish domains
 
-      - name: Release and upload assets
-        if: ${{ env.NeedToSync }}
-        uses: softprops/action-gh-release@v2
+      - name: Purge jsDelivr CDN
+        run: |
+          cd ./domains/ || exit 1
+          for file in $(ls); do
+            curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@domains/${file}"
+          done
+  
+      - name: Delete old workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
         with:
-          name: ${{ env.RELEASE_NAME }}
-          tag_name: ${{ env.TAG_NAME }}
-          draft: false
-          prerelease: false
-          files: |
-            ./publish/geosite.dat
-            ./publish/geosite.dat.sha256sum
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          retain_days: 3
+          keep_minimum_runs: 1

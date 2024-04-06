@@ -49,7 +49,6 @@ jobs:
           tag: release
           overwrite: true
           body: "域名列表"
-          file_glob: true
           file: ./publish/*
 
       - name: Git push assets to `domains` branch
@@ -60,7 +59,7 @@ jobs:
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b release
           git add . && git commit -m "域名列表更新于 ${update_version}"
-          git remote add origin  "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
+          git remote add origin "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
           git push -f -u origin release
 
       - name: Purge jsDelivr CDN

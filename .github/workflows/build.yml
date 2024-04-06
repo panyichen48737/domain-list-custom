@@ -59,10 +59,9 @@ jobs:
           git config --local user.name "github-actions[bot]"
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b release
-          git add .
-          git commit -m "域名列表更新于 ${update_version}"
+          git add . && git commit -m "域名列表更新于 ${update_version}"
           git remote add origin  "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
-          git push -f origin  release
+          git push -f -u origin release
 
       - name: Purge jsDelivr CDN
         run: |

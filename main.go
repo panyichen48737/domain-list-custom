@@ -91,8 +91,6 @@ func main() {
 		if err := ioutil.WriteFile(filepath.Join(*outputPath, *datName), protoBytes, 0644); err != nil {
 			fmt.Println("Failed:", err)
 			os.Exit(1)
-		} else {
-			fmt.Printf("%s has been generated successfully in '%s'.\n", *datName, *outputPath)
 		}
 	}
 

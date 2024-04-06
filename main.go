@@ -7,8 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"google.golang.org/protobuf/proto"
 )
 
 var (

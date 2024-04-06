@@ -12,6 +12,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Set variables
+        run: |
+          echo "update_version=$(date -d '+8 hours' +%Y-%m-%d)" >> ${GITHUB_ENV}
+        shell: bash
+
       - name: Checkout codebase
         uses: actions/checkout@master
 
@@ -29,7 +34,7 @@ jobs:
       - name: Append attribute rules
         run: |
           echo "include:geolocation-!cn @cn" >> ./community/data/cn
-          echo "include:geolocation-cn @!cn" >> ./community/data/geolocation-\!cn
+          echo "include:cn @!cn" >> ./community/data/geolocation-\!cn
 
       - name: Generate `clash` geosite.dat
         run: |
@@ -37,22 +42,21 @@ jobs:
 
       - name: Git push assets to `domains` branch
         run: |
-          echo "update_version=$(date -d '+8 hours' +%Y-%m-%d)" >> ${GITHUB_ENV}
           cd ./publish/ || exit 1
           git init
           git config --local user.name "github-actions[bot]"
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -b domains
+          git checkout -b release
           git add .
           git commit -m "域名列表更新于 ${update_version}"
           git remote add publish "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
-          git push -f publish domains
+          git push -f publish release
 
       - name: Purge jsDelivr CDN
         run: |
-          cd ./domains/ || exit 1
+          cd ./publish/ || exit 1
           for file in $(ls); do
-            curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@domains/${file}"
+            curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@release/${file}"
           done
   
       - name: Delete old workflow runs

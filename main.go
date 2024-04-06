@@ -14,6 +14,7 @@ import (
 
 var (
 	dataPath     = flag.String("datapath", filepath.Join("./", "data"), "Path to your custom 'data' directory")
+	datName      = flag.String("datname", "geosite.dat", "Name of the generated dat file")
 	outputPath   = flag.String("outputpath", "./publish", "Output path to the generated files")
 	exportLists  = flag.String("exportlists", "private,microsoft@cn,category-games@cn,speedtest,cn,geolocation-!cn", "Lists to be exported in plaintext format, separated by ',' comma")
 	excludeAttrs = flag.String("excludeattrs", "cn@!cn@ads,geolocation-!cn@cn@ads", "Exclude rules with certain attributes in certain lists, seperated by ',' comma, support multiple attributes in one list. Example: geolocation-!cn@cn@ads,geolocation-cn@!cn")
@@ -73,6 +74,25 @@ func main() {
 			if len(exportList) > 0 {
 				exportListsSlice = append(exportListsSlice, exportList)
 			}
+		}
+	}
+
+	// Generate dlc.dat
+	if geositeList := listInfoMap.ToProto(excludeAttrsInFile); geositeList != nil {
+		protoBytes, err := proto.Marshal(geositeList)
+		if err != nil {
+			fmt.Println("Failed:", err)
+			os.Exit(1)
+		}
+		if err := os.MkdirAll(*outputPath, 0755); err != nil {
+			fmt.Println("Failed:", err)
+			os.Exit(1)
+		}
+		if err := ioutil.WriteFile(filepath.Join(*outputPath, *datName), protoBytes, 0644); err != nil {
+			fmt.Println("Failed:", err)
+			os.Exit(1)
+		} else {
+			fmt.Printf("%s has been generated successfully in '%s'.\n", *datName, *outputPath)
 		}
 	}
 

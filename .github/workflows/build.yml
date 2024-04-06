@@ -42,15 +42,15 @@ jobs:
           rm -f ./publish/*.dat
 
       - name: Release and upload assets
-        uses: softprops/action-gh-release@v2
+        uses: svenstaro/upload-release-action@v2
         with:
-          name: release
-          tag_name: release
-          draft: false
-          prerelease: false
-          files: ./publish/*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          release_name: release
+          tag: release
+          overwrite: false
+          body: "域名列表"
+          file_glob: true
+          file: ./publish/*
 
       - name: Git push assets to `domains` branch
         run: |

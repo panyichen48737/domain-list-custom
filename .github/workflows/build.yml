@@ -41,16 +41,16 @@ jobs:
           go run ./ --datapath=./community/data
           rm -f ./publish/*.dat
 
-      - name: Release and upload `release` assets
-        uses: svenstaro/upload-release-action@v2
+      - name: Release and upload assets
+        uses: softprops/action-gh-release@v2
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          release_name: publish
-          tag: publish
-          overwrite: true
-          body: "域名列表"
-          file_glob: true
-          file: ./publish/*
+          name: release
+          tag_name: release
+          draft: false
+          prerelease: false
+          files: ./publish/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Git push assets to `domains` branch
         run: |
@@ -58,10 +58,10 @@ jobs:
           git init
           git config --local user.name "github-actions[bot]"
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -b publish
+          git checkout -b release
           git add . && git commit -m "域名列表更新于 ${update_version}"
           git remote add origin "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
-          git push -f -u origin publish
+          git push -f -u origin release
 
       - name: Purge jsDelivr CDN
         run: |

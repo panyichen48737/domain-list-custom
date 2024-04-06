@@ -1,18 +1,11 @@
-# 简介
-
-基于 [v2fly/domain-list-community#256](https://github.com/v2fly/domain-list-community/issues/256) 的提议，重构 [v2fly/domain-list-community](https://github.com/v2fly/domain-list-community) 的构建流程，并添加新功能。
-
-## 与官方版 `dlc.dat` 不同之处
-
-- 将 `dlc.dat` 重命名为 `geosite.dat`
-- 去除 `cn` 列表里带有 `@ads`、`@!cn` 属性的规则
-- 去除 `geolocation-cn` 列表里带有 `@ads`、`@!cn` 属性的规则
-- 去除 `geolocation-!cn` 列表里带有 `@ads`、`@cn` 属性的规则，尽量避免在中国大陆有接入点的海外公司的域名走代理。例如，避免国区 Steam 游戏下载服务走代理。
-
-## 下载地址
-
-[https://github.com/Loyalsoldier/domain-list-custom/releases/latest/download/geosite.dat](https://github.com/Loyalsoldier/domain-list-custom/releases/latest/download/geosite.dat)
-
-## 使用本项目的项目
-
-[@Loyalsoldier/v2ray-rules-dat](https://github.com/Loyalsoldier/v2ray-rules-dat)
+# 文件说明
+## 1. 文件类型
+本项目生成的文件为 [v2fly/domain-list-community/data](https://github.com/v2fly/domain-list-community) 项目的 .txt 格式，包含 `domain`、`full` 和 `regexp` 类型
+## 2. 数据源
+① 每天凌晨 2 点（北京时间）自动构建  
+② private.txt 源采用 [v2fly/domain-list-community/private](https://github.com/v2fly/domain-list-community/blob/master/data/private)  
+③ microsoft.txt 源采用 [v2fly/domain-list-community/microsoft](https://github.com/v2fly/domain-list-community/blob/master/data/microsoft)  
+④ category-games.txt 源采用 [v2fly/domain-list-community/category-games](https://github.com/v2fly/domain-list-community/blob/master/data/category-games)  
+⑤ speedtest.txt 源采用 [v2fly/domain-list-community/speedtest](https://github.com/v2fly/domain-list-community/blob/master/data/speedtest)  
+⑥ geolocation-!cn.txt 源采用 [v2fly/domain-list-community/geolocation-!cn](https://github.com/v2fly/domain-list-community/blob/master/data/geolocation-!cn)（删除了带有 `@cn` 和 `@ads` 的域名，并新增了 v2fly/domain-list-community/cn 中带有 `@!cn` 的域名）  
+⑦ cn.txt 源采用 [v2fly/domain-list-community/cn](https://github.com/v2fly/domain-list-community/blob/master/data/cn)（删除了带有 `@!cn` 和 `@ads` 的域名，并新增了 v2fly/domain-list-community/geolocation-!cn 中带有 `@cn` 的域名）

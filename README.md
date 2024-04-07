@@ -1,6 +1,6 @@
 # 文件说明
 ## 1. 文件类型
-[Clash](https://github.com/Dreamacro/clash) rule-set 规则集文件（.list 格式），适用于 `behavior: classical` 且 `format: text` 的使用场景，包含 `IP-CIDR` 和 `IP-CIDR6` 规则类型
+[Clash](https://github.com/Dreamacro/clash) rule-set 规则集文件（.list 格式），适用于 `behavior: classical` 且 `format: text` 的使用场景，包含 `DOMAIN`、`DOMAIN-SUFFIX`、`DOMAIN-KEYWORD` 和 `PROCESS-NAME` 规则类型
 ## 2. 数据源
 ① 每天凌晨 2 点（北京时间）自动构建  
 ② **`ads.list`** 源采用 [privacy-protection-tools/anti-AD](https://github.com/privacy-protection-tools/anti-AD)  

@@ -93,19 +93,19 @@ jobs:
 
       - name: Generate microsoft-cn
         run: |
-          grep -v 'regexp:' ./publish/microsoft.txt | grep '@cn' | sed 's/^full:/DOMAIN,/' | sed 's/^domain:/DOMAIN-SUFFIX,/' | sed 's/^keyword:/DOMAIN-KEYWORD,/' > ./domains/microsoft-cn.list
+          grep -v 'regexp:' ./publish/microsoft.txt | grep '@cn' | sed 's/^full:/DOMAIN,/' | sed 's/^domain:/DOMAIN-SUFFIX,/' | sed 's/^keyword:/DOMAIN-KEYWORD,/' | sed 's/:@cn$//' > ./domains/microsoft-cn.list
 
       - name: Generate apple-cn
         run: |
-          grep -v 'regexp:' ./publish/apple.txt | grep '@cn' | sed 's/^full:/DOMAIN,/' | sed 's/^domain:/DOMAIN-SUFFIX,/' | sed 's/^keyword:/DOMAIN-KEYWORD,/' > ./domains/apple-cn.list 
+          grep -v 'regexp:' ./publish/apple.txt | grep '@cn' | sed 's/^full:/DOMAIN,/' | sed 's/^domain:/DOMAIN-SUFFIX,/' | sed 's/^keyword:/DOMAIN-KEYWORD,/' | sed 's/:@cn$//' > ./domains/apple-cn.list 
 
       - name: Generate google-cn
         run: |
-          grep -v 'regexp:' ./publish/google.txt | grep '@cn' | sed 's/^full:/DOMAIN,/' | sed 's/^domain:/DOMAIN-SUFFIX,/' | sed 's/^keyword:/DOMAIN-KEYWORD,/' > ./domains/google-cn.list
+          grep -v 'regexp:' ./publish/google.txt | grep '@cn' | sed 's/^full:/DOMAIN,/' | sed 's/^domain:/DOMAIN-SUFFIX,/' | sed 's/^keyword:/DOMAIN-KEYWORD,/' | sed 's/:@cn$//' > ./domains/google-cn.list
 
       - name: Generate games-cn
         run: |
-          grep -v 'regexp:' ./publish/category-games.txt | grep '@cn' | sed 's/^full:/DOMAIN,/' | sed 's/^domain:/DOMAIN-SUFFIX,/' | sed 's/^keyword:/DOMAIN-KEYWORD,/' > ./tmp/temp-games-cn.txt
+          grep -v 'regexp:' ./publish/category-games.txt | grep '@cn' | sed 's/^full:/DOMAIN,/' | sed 's/^domain:/DOMAIN-SUFFIX,/' | sed 's/^keyword:/DOMAIN-KEYWORD,/' | sed 's/:@cn$//' > ./tmp/temp-games-cn.txt
           curl -sSL ${games_cn1} | grep -Ev '#|IP-CIDR' | sed '/^\s*$/d' >> ./tmp/temp-games-cn.txt
           curl -sSL ${games_cn2} | grep -Ev '#|IP-CIDR' | sed '/^\s*$/d' >> ./tmp/temp-games-cn.txt
           sort --ignore-case -u ./tmp/temp-games-cn.txt > ./domains/games-cn.list

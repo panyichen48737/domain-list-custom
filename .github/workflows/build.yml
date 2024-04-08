@@ -84,9 +84,7 @@ jobs:
           DOMAIN,metacubex.github.io
           DOMAIN,metacubexd.pages.dev
           EOF
-          grep 'full:' ./publish/private.txt | sed 's/^full:/DOMAIN,/' >> ./tmp/temp-private.txt
-          grep 'domain:' ./publish/private.txt | sed 's/^domain:/DOMAIN-SUFFIX,/' >> ./tmp/temp-private.txt
-          grep 'keyword:' ./publish/private.txt | sed 's/^keyword:/DOMAIN-KEYWORD,/' >> ./tmp/temp-private.txt
+          grep -v 'regexp:' ./publish/private.txt | sed 's/^full:/DOMAIN,/' | sed 's/^domain:/DOMAIN-SUFFIX,/' | sed 's/^keyword:/DOMAIN-KEYWORD,/' >> ./tmp/temp-private.txt
           curl -sSL ${private1} | grep -Ev '#|IP-CIDR' | sed '/^\s*$/d' >> ./tmp/temp-private.txt
           curl -sSL ${private2} | sed -n '/#AdGuard/,/#/p' | grep -E '^\*.|^\+.' | sed 's/^[*+]\./DOMAIN-SUFFIX,/' >> ./tmp/temp-private.txt
           curl -sSL ${private2} | sed -n '/#AdGuard/,/#/p' | grep -Ev '#|^\*.|^\+.' | sed '/^\s*$/d' | sed 's/^/DOMAIN,/' >> ./tmp/temp-private.txt
@@ -95,30 +93,19 @@ jobs:
 
       - name: Generate microsoft-cn
         run: |
-          grep '@cn' ./publish/microsoft.txt | grep 'full:' | sed 's/^full:/DOMAIN,/' | sed 's/:@cn$//' > ./tmp/temp-microsoft-cn.txt
-          grep '@cn' ./publish/microsoft.txt | grep 'domain:' | sed 's/^domain:/DOMAIN-SUFFIX,/' | sed 's/:@cn$//' >> ./tmp/temp-microsoft-cn.txt
-          grep '@cn' ./publish/microsoft.txt | grep 'keyword:' | sed 's/^keyword:/DOMAIN-KEYWORD,/' | sed 's/:@cn$//' >> ./tmp/temp-microsoft-cn.txt
-          sort --ignore-case -u ./tmp/temp-microsoft-cn.txt > ./domains/microsoft-cn.list
+          grep -v 'regexp:' ./publish/microsoft.txt | grep '@cn' | sed 's/^full:/DOMAIN,/' | sed 's/^domain:/DOMAIN-SUFFIX,/' | sed 's/^keyword:/DOMAIN-KEYWORD,/' > ./domains/microsoft-cn.list
 
       - name: Generate apple-cn
         run: |
-          grep '@cn' ./publish/apple.txt | grep 'full:' | sed 's/^full:/DOMAIN,/' | sed 's/:@cn$//' > ./tmp/temp-apple-cn.txt
-          grep '@cn' ./publish/apple.txt | grep 'domain:' | sed 's/^domain:/DOMAIN-SUFFIX,/' | sed 's/:@cn$//' >> ./tmp/temp-apple-cn.txt
-          grep '@cn' ./publish/apple.txt | grep 'keyword:' | sed 's/^keyword:/DOMAIN-KEYWORD,/' | sed 's/:@cn$//' >> ./tmp/temp-apple-cn.txt
-          sort --ignore-case -u ./tmp/temp-apple-cn.txt > ./domains/apple-cn.list 
+          grep -v 'regexp:' ./publish/apple.txt | grep '@cn' | sed 's/^full:/DOMAIN,/' | sed 's/^domain:/DOMAIN-SUFFIX,/' | sed 's/^keyword:/DOMAIN-KEYWORD,/' > ./domains/apple-cn.list 
 
       - name: Generate google-cn
         run: |
-          grep '@cn' ./publish/google.txt | grep 'full:' | sed 's/^full:/DOMAIN,/' | sed 's/:@cn$//' > ./tmp/temp-google-cn.txt
-          grep '@cn' ./publish/google.txt | grep 'domain:' | sed 's/^domain:/DOMAIN-SUFFIX,/' | sed 's/:@cn$//' >> ./tmp/temp-google-cn.txt
-          grep '@cn' ./publish/google.txt | grep 'keyword:' | sed 's/^keyword:/DOMAIN-KEYWORD,/' | sed 's/:@cn$//' >> ./tmp/temp-google-cn.txt
-          sort --ignore-case -u ./tmp/temp-google-cn.txt > ./domains/google-cn.list
+          grep -v 'regexp:' ./publish/google.txt | grep '@cn' | sed 's/^full:/DOMAIN,/' | sed 's/^domain:/DOMAIN-SUFFIX,/' | sed 's/^keyword:/DOMAIN-KEYWORD,/' > ./domains/google-cn.list
 
       - name: Generate games-cn
         run: |
-          grep '@cn' ./publish/category-games.txt | grep 'full:' | sed 's/^full:/DOMAIN,/' | sed 's/:@cn$//' > ./tmp/temp-games-cn.txt
-          grep '@cn' ./publish/category-games.txt | grep 'domain:' | sed 's/^domain:/DOMAIN-SUFFIX,/' | sed 's/:@cn$//' >> ./tmp/temp-games-cn.txt
-          grep '@cn' ./publish/category-games.txt | grep 'keyword:' | sed 's/^keyword:/DOMAIN-KEYWORD,/' | sed 's/:@cn$//' >> ./tmp/temp-games-cn.txt
+          grep -v 'regexp:' ./publish/category-games.txt | grep '@cn' | sed 's/^full:/DOMAIN,/' | sed 's/^domain:/DOMAIN-SUFFIX,/' | sed 's/^keyword:/DOMAIN-KEYWORD,/' > ./tmp/temp-games-cn.txt
           curl -sSL ${games_cn1} | grep -Ev '#|IP-CIDR' | sed '/^\s*$/d' >> ./tmp/temp-games-cn.txt
           curl -sSL ${games_cn2} | grep -Ev '#|IP-CIDR' | sed '/^\s*$/d' >> ./tmp/temp-games-cn.txt
           sort --ignore-case -u ./tmp/temp-games-cn.txt > ./domains/games-cn.list
@@ -171,9 +158,7 @@ jobs:
           DOMAIN-KEYWORD,test-ipv6
           DOMAIN-KEYWORD,testipv6
           EOF
-          grep 'full:' ./publish/speedtest.txt | sed 's/^full:/DOMAIN,/' >> ./tmp/temp-networktest.txt
-          grep 'domain:' ./publish/speedtest.txt | sed 's/^domain:/DOMAIN-SUFFIX,/' >> ./tmp/temp-networktest.txt
-          grep 'keyword:' ./publish/speedtest.txt | sed 's/^keyword:/DOMAIN-KEYWORD,/' >> ./tmp/temp-networktest.txt
+          grep -v 'regexp:' ./publish/speedtest.txt | sed 's/^full:/DOMAIN,/' | sed 's/^domain:/DOMAIN-SUFFIX,/' | sed 's/^keyword:/DOMAIN-KEYWORD,/' >> ./tmp/temp-networktest.txt
           curl -sSL ${networktest} | grep -Ev '#|IP-CIDR' | sed '/^\s*$/d' >> ./tmp/temp-networktest.txt
           sort --ignore-case -u ./tmp/temp-networktest.txt > ./domains/networktest.list
 
@@ -186,17 +171,13 @@ jobs:
           chmod +x ./gfwlist2dnsmasq/gfwlist2dnsmasq.sh
           ./gfwlist2dnsmasq/gfwlist2dnsmasq.sh -l -o ./tmp/temp-proxy.txt
           sed -i 's/^/DOMAIN-SUFFIX,/' ./tmp/temp-proxy.txt
-          grep 'full:' ./publish/geolocation-\!cn.txt | sed 's/^full:/DOMAIN,/' | sed 's/:@\!cn$//' >> ./tmp/temp-proxy.txt
-          grep 'domain:' ./publish/geolocation-\!cn.txt | sed 's/^domain:/DOMAIN-SUFFIX,/' | sed 's/:@\!cn$//' >> ./tmp/temp-proxy.txt
-          grep 'keyword:' ./publish/geolocation-\!cn.txt | sed 's/^keyword:/DOMAIN-KEYWORD,/' | sed 's/:@\!cn$//' >> ./tmp/temp-proxy.txt
+          grep -v 'regexp:' ./publish/geolocation-\!cn.txt | sed 's/^full:/DOMAIN,/' | sed 's/^domain:/DOMAIN-SUFFIX,/' | sed 's/^keyword:/DOMAIN-KEYWORD,/' | sed 's/:@\!cn$//' >> ./tmp/temp-proxy.txt
           curl -sSL ${proxy} | grep -Ev '#|IP-CIDR' | sed '/^\s*$/d' >> ./tmp/temp-proxy.txt
           sort --ignore-case -u ./tmp/temp-proxy.txt > ./domains/proxy.list
 
       - name: Generate cn
         run: |
-          grep 'full:' ./publish/cn.txt | sed 's/^full:/DOMAIN,/' | sed 's/:@cn$//' > ./tmp/temp-cn.txt
-          grep 'domain:' ./publish/cn.txt | sed 's/^domain:/DOMAIN-SUFFIX,/' | sed 's/:@cn$//' >> ./tmp/temp-cn.txt
-          grep 'keyword:' ./publish/cn.txt | sed 's/^keyword:/DOMAIN-KEYWORD,/' | sed 's/:@cn$//' >> ./tmp/temp-cn.txt
+          grep -v 'regexp:' ./publish/cn.txt | sed 's/^full:/DOMAIN,/' | sed 's/^domain:/DOMAIN-SUFFIX,/' | sed 's/^keyword:/DOMAIN-KEYWORD,/' | sed 's/:@cn$//' > ./tmp/temp-cn.txt
           curl -sSL ${cn} | grep -Ev '#|IP-CIDR' | sed '/^\s*$/d' >> ./tmp/temp-cn.txt
           sort --ignore-case -u ./tmp/temp-cn.txt > ./domains/cn.list
           rm -rf ./tmp* ./publish*

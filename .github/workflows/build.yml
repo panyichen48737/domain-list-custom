@@ -86,14 +86,14 @@ jobs:
           EOF
           grep -v 'regexp:' ./publish/private.txt | sed '/^\s*$/d' | sed 's/^full:/DOMAIN,/' | sed 's/^domain:/DOMAIN-SUFFIX,/' | sed 's/^keyword:/DOMAIN-KEYWORD,/' >> ./tmp/temp-private.txt
           curl -sSL ${private1} | grep -Ev '#|IP-CIDR' | sed '/^\s*$/d' >> ./tmp/temp-private.txt
-          curl -sSL ${private2} | grep -Ev '#|\+|\*' | sed '/^\s*$/d' | sed 's/^/DOMAIN,/' >> ./tmp/temp-private.txt
-          curl -sSL ${private2} | grep -Ev '#|.\*' | grep -E '\*|\+' | sed 's/^[*+]\./DOMAIN-SUFFIX,/' >> ./tmp/temp-private.txt
+          curl -sSL ${private2} | grep -i '\.[A-Z]' | awk -F'[/:]' '{print $4}' | sed 's/^/DOMAIN,/' >> ./tmp/temp-private.txt
           sort --ignore-case -u ./tmp/temp-private.txt > ./domains/private.list
 
       - name: Generate fakeip-filter
         run: |
-          curl-sSL ${fakeip_filter} | grep -i '\.[A-Z]' | awk -F'[/:]' '{print $4}' | sed 's/^/DOMAIN,/' > ./tmp/temp-fakeip-filter.txt
-          comm -23 <(sort ./tmp/temp-fakeip-filter.txt) <(sort ./domains/private.list) > ./domains/fakeip-filter.list
+          curl-sSL ${fakeip_filter} | grep -Ev '#|\+|\*' | sed '/^\s*$/d' | sed 's/^/DOMAIN,/' > ./tmp/temp-fakeip-filter.txt
+          curl-sSL ${fakeip_filter} | grep -Ev '#|.\*' | grep -E '\*|\+' | sed 's/^[*+]\./DOMAIN-SUFFIX,/' >> ./tmp/temp-fakeip-filter.txt
+          grep -fv ./tmp/temp-fakeip-filter.txt ./domains/private.list > ./domains/fakeip-filter.list
 
       - name: Generate microsoft-cn
         run: |

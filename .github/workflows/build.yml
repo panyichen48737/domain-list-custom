@@ -91,7 +91,7 @@ jobs:
 
       - name: Generate fakeip-filter
         run: |
-          curl -sSL ${fakeip_filter} | grep -Ev '#|\+|\*' | sed '/^\s*$/d' | sed 's/^/DOMAIN,/' > ./tmp/temp-fakeip-filter.txt
+          curl -sSL ${fakeip_filter} | grep -Ev '#|\+|\*|Mijia' | sed '/^\s*$/d' | sed 's/^/DOMAIN,/' > ./tmp/temp-fakeip-filter.txt
           curl -sSL ${fakeip_filter} | grep -Ev '#|.\*' | grep -E '\*|\+' | sed 's/^[*+]\./DOMAIN-SUFFIX,/' >> ./tmp/temp-fakeip-filter.txt
           grep -vf ./domains/private.list ./tmp/temp-fakeip-filter.txt > ./domains/fakeip-filter.list
 

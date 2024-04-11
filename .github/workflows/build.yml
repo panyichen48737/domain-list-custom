@@ -17,8 +17,8 @@ jobs:
           echo "update_version=$(date -d '+8 hours' +%Y-%m-%d)" >> ${GITHUB_ENV}
           echo "ads=https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-clash.yaml" >> $GITHUB_ENV
           echo "private1=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Lan/Lan.list" >> $GITHUB_ENV
-          echo "private2=https://raw.githubusercontent.com/juewuy/ShellCrash/dev/public/fake_ip_filter.list" >> $GITHUB_ENV
-          echo "private3=https://raw.githubusercontent.com/XIU2/TrackersListCollection/master/all.txt" >> $GITHUB_ENV
+          echo "private2=https://raw.githubusercontent.com/XIU2/TrackersListCollection/master/all.txt" >> $GITHUB_ENV
+          echo "fakeip_filter=https://raw.githubusercontent.com/juewuy/ShellCrash/dev/public/fake_ip_filter.list" >> $GITHUB_ENV
           echo "games_cn1=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/SteamCN/SteamCN.list" >> $GITHUB_ENV
           echo "games_cn2=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Game/GameDownloadCN/GameDownloadCN.list" >> $GITHUB_ENV
           echo "netflix=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Netflix/Netflix.list" >> $GITHUB_ENV
@@ -86,10 +86,14 @@ jobs:
           EOF
           grep -v 'regexp:' ./publish/private.txt | sed '/^\s*$/d' | sed 's/^full:/DOMAIN,/' | sed 's/^domain:/DOMAIN-SUFFIX,/' | sed 's/^keyword:/DOMAIN-KEYWORD,/' >> ./tmp/temp-private.txt
           curl -sSL ${private1} | grep -Ev '#|IP-CIDR' | sed '/^\s*$/d' >> ./tmp/temp-private.txt
-          curl -sSL ${private2} | sed -n '/#AdGuard/,/#/p' | grep -E '^\*.|^\+.' | sed 's/^[*+]\./DOMAIN-SUFFIX,/' >> ./tmp/temp-private.txt
-          curl -sSL ${private2} | sed -n '/#AdGuard/,/#/p' | grep -Ev '#|^\*.|^\+.' | sed '/^\s*$/d' | sed 's/^/DOMAIN,/' >> ./tmp/temp-private.txt
-          curl -sSL ${private3} | grep -i '\.[A-Z]' | awk -F'[/:]' '{print $4}' | sed 's/^/DOMAIN,/' >> ./tmp/temp-private.txt
+          curl -sSL ${private2} | grep -Ev '#|\+|\*' | sed '/^\s*$/d' | sed 's/^/DOMAIN,/' >> ./tmp/temp-private.txt
+          curl -sSL ${private2} | grep -Ev '#|.\*' | grep -E '\*|\+' | sed 's/^[*+]\./DOMAIN-SUFFIX,/' >> ./tmp/temp-private.txt
           sort --ignore-case -u ./tmp/temp-private.txt > ./domains/private.list
+
+      - name: Generate fakeip-filter
+        run: |
+          curl-sSL ${fakeip_filter} | grep -i '\.[A-Z]' | awk -F'[/:]' '{print $4}' | sed 's/^/DOMAIN,/' > ./tmp/temp-fakeip-filter.txt
+          comm -23 <(sort ./tmp/temp-fakeip-filter.txt) <(sort ./domains/private.list) > ./domains/fakeip-filter.list
 
       - name: Generate microsoft-cn
         run: |

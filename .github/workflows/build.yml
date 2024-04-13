@@ -14,8 +14,7 @@ jobs:
     steps:
       - name: Set variables
         run: |
-          echo "update_version=$(date -d '+8 hours' +%Y-%m-%d)" >> ${GITHUB_ENV}
-          echo "ads=https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-clash.yaml" >> $GITHUB_ENV
+          echo "update_version=$(date -d '+8 hours' +%Y-%m-%d)" >> ${GITHUB_ENV
           echo "private1=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Lan/Lan.list" >> $GITHUB_ENV
           echo "private2=https://raw.githubusercontent.com/XIU2/TrackersListCollection/master/all.txt" >> $GITHUB_ENV
           echo "fakeip_filter=https://raw.githubusercontent.com/juewuy/ShellCrash/dev/public/fake_ip_filter.list" >> $GITHUB_ENV
@@ -23,18 +22,13 @@ jobs:
           echo "games_cn2=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Game/GameDownloadCN/GameDownloadCN.list" >> $GITHUB_ENV
           echo "netflix=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Netflix/Netflix.list" >> $GITHUB_ENV
           echo "disney=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Disney/Disney.list" >> $GITHUB_ENV
-          echo "max=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/HBO/HBO.list" >> $GITHUB_ENV
-          echo "primevideo=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/PrimeVideo/PrimeVideo.list" >> $GITHUB_ENV
           echo "appletv=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AppleTV/AppleTV.list" >> $GITHUB_ENV
           echo "youtube=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/YouTube/YouTube.list" >> $GITHUB_ENV
-          echo "tiktok=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/TikTok/TikTok.list" >> $GITHUB_ENV
-          echo "bilibili=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/BiliBili/BiliBili.list" >> $GITHUB_ENV
           echo "ai1=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI.list" >> $GITHUB_ENV
           echo "ai2=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Copilot/Copilot.list" >> $GITHUB_ENV
           echo "ai3=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Gemini/Gemini.list" >> $GITHUB_ENV
           echo "ai4=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Claude/Claude.list" >> $GITHUB_ENV
           echo "networktest=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Speedtest/Speedtest.list" >> $GITHUB_ENV
-          echo "applications=https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/applications.txt" >> $GITHUB_ENV
           echo "proxy=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Global/Global.list" >> $GITHUB_ENV
           echo "cn=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/ChinaMax/ChinaMax.list" >> $GITHUB_ENV
         shell: bash
@@ -67,11 +61,6 @@ jobs:
       - name: Generate `clash` geosite.dat
         run: |
           go run ./ --datapath=./community/data/
-
-      - name: Generate ads
-        run: |
-          mkdir -p ./tmp/ ./domains/
-          curl -sSL ${ads} | grep -Ev '#|payload:' | sed '/^\s*$/d' | sed "s/'$//" | sed 's/^[ \t]*//' | sed "s/^- '+\./DOMAIN-SUFFIX,/" | sed "s/^- '/DOMAIN,/" > ./domains/ads.list
 
       - name: Generate private
         run: |
@@ -121,30 +110,10 @@ jobs:
       - name: Generate disney
         run: |
           curl -sSL ${disney} | grep -Ev '#|IP-CIDR' | sed '/^\s*$/d' > ./domains/disney.list
-
-      - name: Generate max
-        run: |
-          curl -sSL ${max} | grep -Ev '#|IP-CIDR' | sed '/^\s*$/d' > ./domains/max.list
-
-      - name: Generate primevideo
-        run: |
-          curl -sSL ${primevideo} | grep -Ev '#|IP-CIDR' | sed '/^\s*$/d' > ./domains/primevideo.list
-
+          
       - name: Generate appletv
         run: |
           curl -sSL ${appletv} | grep -Ev '#|IP-CIDR' | sed '/^\s*$/d' > ./domains/appletv.list
-
-      - name: Generate youtube
-        run: |
-          curl -sSL ${youtube} | grep -Ev '#|IP-CIDR' | sed '/^\s*$/d' > ./domains/youtube.list
-
-      - name: Generate tiktok
-        run: |
-          curl -sSL ${tiktok} | grep -Ev '#|IP-CIDR' | sed '/^\s*$/d' > ./domains/tiktok.list
-
-      - name: Generate bilibili
-        run: |
-          curl -sSL ${bilibili} | grep -Ev '#|IP-CIDR' | sed '/^\s*$/d' > ./domains/bilibili.list
 
       - name: Generate ai
         run: |
@@ -165,10 +134,6 @@ jobs:
           grep -v 'regexp:' ./publish/speedtest.txt | sed '/^\s*$/d' | sed 's/^full:/DOMAIN,/' | sed 's/^domain:/DOMAIN-SUFFIX,/' | sed 's/^keyword:/DOMAIN-KEYWORD,/' >> ./tmp/temp-networktest.txt
           curl -sSL ${networktest} | grep -Ev '#|IP-CIDR' | sed '/^\s*$/d' >> ./tmp/temp-networktest.txt
           sort --ignore-case -u ./tmp/temp-networktest.txt > ./domains/networktest.list
-
-      - name: Generate applications
-        run: |
-          curl -sSL ${applications} | grep -v 'payload:' | sed '/^\s*$/d' | sed 's/^[ \t]*//' | sed 's/^- //' > ./domains/applications.list
 
       - name: Generate proxy
         run: |

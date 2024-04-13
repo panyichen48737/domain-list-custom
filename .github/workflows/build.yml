@@ -63,6 +63,7 @@ jobs:
 
       - name: Generate private
         run: |
+          mkdir -p ./tmp/ ./domains/
           cat <<EOF > ./tmp/temp-private.txt
           DOMAIN,clash.razord.top
           DOMAIN,clash.metacubex.one

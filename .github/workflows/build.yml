@@ -136,7 +136,7 @@ jobs:
 
       - name: Generate games
         run: |
-          sed -e 's/^full:/DOMAIN,/' -e 's/^domain:/DOMAIN-SUFFIX,/' -e 's/^keyword:/DOMAIN-KEYWORD,/' -e 's/^regexp:/DOMAIN-REGEX,/' -e 's/:@cn$//' ./publish/category-games.txt >> ./tmp/temp-games.txt
+          sed -e 's/^full:/DOMAIN,/' -e 's/^domain:/DOMAIN-SUFFIX,/' -e 's/^keyword:/DOMAIN-KEYWORD,/' -e 's/^regexp:/DOMAIN-REGEX,/' -e 's/:@cn$//' -e 's/:@!cn$//' ./publish/category-games.txt >> ./tmp/temp-games.txt
           curl -sSL ${games1} | grep -Ev '#|IP-' | sed '/^\s*$/d' >> ./tmp/temp-games.txt
           curl -sSL ${games2} | grep -Ev '#|IP-' | sed '/^\s*$/d' >> ./tmp/temp-games.txt
           curl -sSL ${games3} | grep -Ev '#|IP-' | sed '/^\s*$/d' >> ./tmp/temp-games.txt

@@ -197,7 +197,6 @@ jobs:
           DOMAIN-KEYWORD,test-ipv6
           DOMAIN-KEYWORD,testipv6
           EOF
-          sed -e 's/^full:/DOMAIN,/' -e 's/^domain:/DOMAIN-SUFFIX,/' -e 's/^keyword:/DOMAIN-KEYWORD,/' -e 's/^regexp:/DOMAIN-REGEX,/' ./publish/speedtest.txt >> ./tmp/temp-networktest.txt
           curl -sSL ${networktest} | grep -Ev '#|IP-' | sed '/^\s*$/d' >> ./tmp/temp-networktest.txt
           sort --ignore-case -u ./tmp/temp-networktest.txt >> ./domains/networktest.list
 

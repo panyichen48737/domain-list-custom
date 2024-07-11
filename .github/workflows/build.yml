@@ -65,6 +65,12 @@ jobs:
           repository: v2fly/domain-list-community
           path: community
 
+      - name: Checkout cokebar/gfwlist2dnsmasq
+        uses: actions/checkout@v4
+        with:
+          repository: cokebar/gfwlist2dnsmasq
+          path: gfwlist2dnsmasq
+
       - name: Append attribute domains
         run: |
           echo "include:geolocation-!cn @cn" >> ./community/data/cn
@@ -93,7 +99,6 @@ jobs:
           DOMAIN,metacubex.github.io
           DOMAIN,metacubexd.pages.dev
           EOF
-          sed -e 's/^full:/DOMAIN,/' -e 's/^domain:/DOMAIN-SUFFIX,/' -e 's/^keyword:/DOMAIN-KEYWORD,/' -e 's/^regexp:/DOMAIN-REGEX,/' ./publish/private.txt >> ./tmp/temp-private.txt
           curl -sSL ${private1} | grep -Ev '#|IP-' | sed '/^\s*$/d' >> ./tmp/temp-private.txt
           curl -sSL ${private2} | grep -i '\.[A-Z]' | awk -F'[/:]' '{print $4}' | sed 's/^/DOMAIN,/' >> ./tmp/temp-private.txt
           sort --ignore-case -u ./tmp/temp-private.txt >> ./domains/private.list

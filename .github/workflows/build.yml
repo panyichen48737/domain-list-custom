@@ -215,11 +215,6 @@ jobs:
           curl -sSL ${proxy} | grep -Ev '#|IP-' | sed '/^\s*$/d' >> ./tmp/temp-proxy.txt
           sort --ignore-case -u ./tmp/temp-proxy.txt >> ./domains/proxy.list
 
-      - name: Generate 1
-        run: |
-          chmod +x list_files.sh
-          ./list_files.sh
-          mv ./publish/* ./domains
             
       - name: Generate cn
         run: |
@@ -227,6 +222,9 @@ jobs:
           curl -sSL ${cn} | grep -Ev '#|IP-' | sed '/^\s*$/d' >> ./tmp/temp-cn.txt
           curl -sSL ${CHINA_DOMAINS_URL} | perl -ne '/^server=\/([^\/]+)\// && print "DOMAIN,$1\n"' >> ./tmp/temp-cn.list
           sort --ignore-case -u ./tmp/temp-cn.txt >> ./domains/cn.list
+          chmod +x list_files.sh
+          ./list_files.sh
+          mv ./publish/* ./domains
           rm -rf ./tmp* ./publish*
 
       - name: Release and upload `clash` assets

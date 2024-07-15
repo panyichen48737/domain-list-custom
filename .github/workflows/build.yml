@@ -80,6 +80,7 @@ jobs:
       - name: Generate `clash` geosite.dat and domains(.txt files)
         run: |
           go run ./ --datapath=./community/data/
+          go run ./ --help
 
       - name: Generate fakeip-filter
         run: |

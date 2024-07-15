@@ -217,21 +217,16 @@ jobs:
 
       - name: Generate 1
         run: |
-# 检查目录是否存在
-if [ -d "./publish" ]; then
-    # 列出目录中的所有文件并整理成列表
-    file_list=$(ls ./publish)
-    
-    # 打印文件列表
-    echo "文件列表："
-    for file in $file_list
-    do
-        echo $file
-    done
-else
-    echo "./1 目录不存在"
-fi
-
+          # 检查目录是否存在
+          if [ -d "./publish" ]; then
+            file_list=$(ls ./publish)
+            # 打印文件列表
+            echo "文件列表："
+            for file in $file_list
+            do
+                echo $file
+            done
+            
       - name: Generate cn
         run: |
           sed -e 's/^full:/DOMAIN,/' -e 's/^domain:/DOMAIN-SUFFIX,/' -e 's/^keyword:/DOMAIN-KEYWORD,/' -e 's/^regexp:/DOMAIN-REGEX,/' -e 's/:@cn$//' ./publish/cn.txt >> ./tmp/temp-cn.txt

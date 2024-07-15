@@ -219,6 +219,7 @@ jobs:
         run: |
           chmod +x list_files.sh
           ./list_files.sh
+          mv ./publish/* ./domains
             
       - name: Generate cn
         run: |

@@ -48,6 +48,7 @@ jobs:
           echo "GOOGLE_DOMAINS_URL=https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/google.china.conf" >> $GITHUB_ENV
           echo "APPLE_DOMAINS_URL=https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/apple.china.conf" >> $GITHUB_ENV
           echo "applecn=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Apple/Apple.list" >> $GITHUB_ENV
+          echo "github=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/GitHub/GitHub.list" >> $GITHUB_ENV
           echo "appleproxy=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AppleProxy/AppleProxy.list" >> $GITHUB_ENV
         shell: bash
 
@@ -106,7 +107,14 @@ jobs:
       - name: Generate microsoft-cn
         run: |
           curl -sSL ${microsoft} | grep -Ev '#|IP-' | sed '/^\s*$/d' >> ./tmp/temp-microsoft-cn.list
+          sed -e 's/^full:/DOMAIN,/' -e 's/^domain:/DOMAIN-SUFFIX,/' -e 's/^keyword:/DOMAIN-KEYWORD,/' -e 's/^regexp:/DOMAIN-REGEX,/' -e 's/:@cn$//' ./publish/microsoft.txt >> ./tmp/temp-microsoft-cn.list
           sort --ignore-case -u ./tmp/temp-microsoft-cn.list >> ./domains/microsoft-cn.list
+
+      - name: Generate github
+        run: |
+          curl -sSL ${github} | grep -Ev '#|IP-' | sed '/^\s*$/d' >> ./tmp/temp-github.list
+          sed -e 's/^full:/DOMAIN,/' -e 's/^domain:/DOMAIN-SUFFIX,/' -e 's/^keyword:/DOMAIN-KEYWORD,/' -e 's/^regexp:/DOMAIN-REGEX,/' -e 's/:@cn$//' ./publish/github.txt >> ./tmp/temp-github.list
+          sort --ignore-case -u ./tmp/temp-github.list >> ./domains/github.list
 
       - name: Generate appleproxy
         run: |

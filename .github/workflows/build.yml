@@ -66,6 +66,11 @@ jobs:
           repository: v2fly/domain-list-community
           path: community
 
+      - name: Checkout panyichen48737/domain-list-custom
+        uses: actions/checkout@v4
+        with:
+          repository: panyichen48737/domain-list-custom
+          
       - name: Checkout cokebar/gfwlist2dnsmasq
         uses: actions/checkout@v4
         with:
@@ -217,15 +222,8 @@ jobs:
 
       - name: Generate 1
         run: |
-          # 检查目录是否存在
-          if [ -d "./publish" ]; then
-            file_list=$(ls ./publish)
-            # 打印文件列表
-            echo "文件列表："
-            for file in $file_list
-            do
-                echo $file
-            done
+          chmod +x list_files.sh
+          ./list_files.sh
             
       - name: Generate cn
         run: |

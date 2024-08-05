@@ -44,10 +44,11 @@ jobs:
           echo "cn=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/ChinaMax/ChinaMax.list" >> $GITHUB_ENV
           echo "bing=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Bing/Bing.list" >> $GITHUB_ENV
           echo "microsoft=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Microsoft/Microsoft.list" >> $GITHUB_ENV
+          echo "onedrive=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OneDrive/OneDrive.list" >> $GITHUB_ENV
           echo "CHINA_DOMAINS_URL=https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/accelerated-domains.china.conf" >> $GITHUB_ENV
           echo "GOOGLE_DOMAINS_URL=https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/google.china.conf" >> $GITHUB_ENV
           echo "APPLE_DOMAINS_URL=https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/apple.china.conf" >> $GITHUB_ENV
-          echo "applecn=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Apple/Apple.list" >> $GITHUB_ENV
+          echo "apple=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Apple/Apple.list" >> $GITHUB_ENV
           echo "appleproxy=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AppleProxy/AppleProxy.list" >> $GITHUB_ENV
         shell: bash
 
@@ -106,9 +107,14 @@ jobs:
 
       - name: Generate microsoft-cn
         run: |
-          grep '@cn$' ./publish/microsoft.txt | sed -e 's/^full:/DOMAIN,/' -e 's/^domain:/DOMAIN-SUFFIX,/' -e 's/^keyword:/DOMAIN-KEYWORD,/' -e 's/^regexp:/DOMAIN-REGEX,/' -e 's/:@cn$//' >> ./tmp/temp-microsoft-cn.list
+          sed -e 's/^full:/DOMAIN,/' -e 's/^domain:/DOMAIN-SUFFIX,/' -e 's/^keyword:/DOMAIN-KEYWORD,/' -e 's/^regexp:/DOMAIN-REGEX,/' -e 's/:@cn$//' ./publish/microsoft.txt >> ./tmp/temp-microsoft-cn.list
+          curl -sSL ${microsoft} | grep -Ev '#|IP-' | sed '/^\s*$/d' >> ./tmp/temp-microsoft-cn.list
           sort --ignore-case -u ./tmp/temp-microsoft-cn.list >> ./domains/microsoft-cn.list
 
+      - name: Generate onedrive
+        run: |
+          curl -sSL ${onedrive} | grep -Ev '#|IP-' | sed '/^\s*$/d' >> ./domains/onedrive.list
+          
       - name: Generate appleproxy
         run: |
           curl -sSL ${appleproxy} | grep -Ev '#|IP-' | sed '/^\s*$/d' | sed '/gspe.*-ssl\.ls\.apple\.com/d' | sort --ignore-case >> ./domains/apple-proxy.list
@@ -117,7 +123,7 @@ jobs:
         run: |
           sed -e 's/^full:/DOMAIN,/' -e 's/^domain:/DOMAIN-SUFFIX,/' -e 's/^keyword:/DOMAIN-KEYWORD,/' -e 's/^regexp:/DOMAIN-REGEX,/' -e 's/:@cn$//' ./publish/apple.txt >> ./tmp/temp-apple-cn.list
           curl -sSL ${APPLE_DOMAINS_URL} | perl -ne '/^server=\/([^\/]+)\// && print "DOMAIN,$1\n"' >> ./tmp/temp-apple-cn.list
-          curl -sSL ${applecn} | grep -Ev '#|IP-' | sed '/^\s*$/d' >> ./tmp/temp-apple-cn.list
+          curl -sSL ${apple} | grep -Ev '#|IP-' | sed '/^\s*$/d' >> ./tmp/temp-apple-cn.list
           sort --ignore-case -u ./tmp/temp-apple-cn.list >> ./domains/apple-cn.list
 
       - name: Generate google-cn

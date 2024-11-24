@@ -197,8 +197,8 @@ jobs:
 
       - name: Generate proxy
         run: |
-          chmod +x ./gfwlist2dnsmasq/gfwlist2dnsmasq.sh
-          ./gfwlist2dnsmasq/gfwlist2dnsmasq.sh -l -o ./tmp/temp-proxy.txt
+          chmod +x ./gfwlist2dnsmasq.sh
+          ./gfwlist2dnsmasq.sh -l -o ./tmp/temp-proxy.txt
           sed -i 's/^/DOMAIN-SUFFIX,/' ./tmp/temp-proxy.txt
           sed -e 's/^full:/DOMAIN,/' -e 's/^domain:/DOMAIN-SUFFIX,/' -e 's/^keyword:/DOMAIN-KEYWORD,/' -e 's/^regexp:/DOMAIN-REGEX,/' -e 's/:@\!cn$//' ./publish/geolocation-\!cn.txt >> ./tmp/temp-proxy.txt
           curl -sSL ${proxy} | grep -Ev '#|IP-' >> ./tmp/temp-proxy.txt

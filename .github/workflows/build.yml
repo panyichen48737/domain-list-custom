@@ -96,7 +96,8 @@ jobs:
           
       - name: Generate microsoft-cn
         run: |
-          sed -e 's/^full:/DOMAIN,/' -e 's/^domain:/DOMAIN-SUFFIX,/' -e 's/^keyword:/DOMAIN-KEYWORD,/' -e 's/^regexp:/DOMAIN-REGEX,/' -e 's/:@cn$//' ./publish/microsoft.txt >> ./tmp/temp-microsoft-cn.list
+          #sed -e 's/^full:/DOMAIN,/' -e 's/^domain:/DOMAIN-SUFFIX,/' -e 's/^keyword:/DOMAIN-KEYWORD,/' -e 's/^regexp:/DOMAIN-REGEX,/' -e 's/:@cn$//' ./publish/microsoft.txt >> ./tmp/temp-microsoft-cn.list
+          
           curl -sSL ${microsoft} | grep -Ev '#|IP-' | sed '/^\s*$/d' >> ./tmp/temp-microsoft-cn.list
           sort --ignore-case -u ./tmp/temp-microsoft-cn.list >> ./domains/microsoft-cn.list
 

@@ -180,11 +180,19 @@ jobs:
           curl -sSL ${networktest} | grep -Ev '#|IP-' >> ./tmp/temp-networktest.txt
           sort --ignore-case -u ./tmp/temp-networktest.txt > ./domains/networktest.list
 
+      - name: Generate tld-proxy
+        run: |
+          sed 's/^domain:/DOMAIN-SUFFIX,/' ./publish/tld-\!cn.txt | sort --ignore-case > ./domains/tld-proxy.list
+
       - name: Generate proxy
         run: |
-          sed -e 's/^full:/DOMAIN,/' -e 's/^domain:/DOMAIN-SUFFIX,/' -e 's/^keyword:/DOMAIN-KEYWORD,/' -e 's/^regexp:/DOMAIN-REGEX,/' -e 's/:@\!cn$//' ./publish/geolocation-\!cn.txt >> ./tmp/temp-proxy.txt
+          sed -e 's/^full:/DOMAIN,/' -e 's/^domain:/DOMAIN-SUFFIX,/' -e 's/^keyword:/DOMAIN-KEYWORD,/' -e 's/^regexp:/DOMAIN-REGEX,/' -e 's/:@\!cn$//' ./publish/geolocation-\!cn.txt > ./tmp/temp-proxy.txt
           curl -sSL ${proxy} | grep -Ev '#|IP-' >> ./tmp/temp-proxy.txt
           sort --ignore-case -u ./tmp/temp-proxy.txt > ./domains/proxy.list
+
+      - name: Generate tld-cn
+        run: |
+          sed 's/^domain:/DOMAIN-SUFFIX,/' ./publish/tld-cn.txt | sort --ignore-case > ./domains/tld-cn.list
 
       - name: Generate cn
         run: |

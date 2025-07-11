@@ -1,7 +1,34 @@
 # 文件说明
 ## 1. 文件类型
 [mihomo](https://github.com/MetaCubeX/mihomo) rule-set 规则集文件（.list 格式），包含 `DOMAIN`、`DOMAIN-SUFFIX`、`DOMAIN-KEYWORD`、`DOMAIN-REGEX` 和 `PROCESS-NAME` 规则类型，适用于 `behavior: classical` 且 `format: text` 的使用场景
-## 2. 数据源
+## 2. 数据去重
+① 去除 `DOMAIN-SUFFIX` 类型中冗余的子域名，如：
+```
+DOMAIN-SUFFIX,test.cn
+DOMAIN-SUFFIX,cn
+DOMAIN-SUFFIX,123.example.com
+DOMAIN-SUFFIX,abc.example.com
+DOMAIN-SUFFIX,example.com
+```
+去除冗余子域名后，仅保留：
+```
+DOMAIN-SUFFIX,cn
+DOMAIN-SUFFIX,example.com
+```
+② 去除 `DOMAIN-SUFFIX` 类型中已存在，`DOMAIN` 类型中冗余的域名，如：
+```
+DOMAIN,test.cn
+DOMAIN-SUFFIX,cn
+DOMAIN,123.example.com
+DOMAIN,test.abc.example.com
+DOMAIN-SUFFIX,example.com
+```
+去除 `DOMAIN` 类型中冗余的域名后，仅保留：
+```
+DOMAIN-SUFFIX,cn
+DOMAIN-SUFFIX,example.com
+```
+## 3. 数据源
 ① 每天凌晨 2 点（北京时间 UTC+8）自动构建  
 ② **`fakeip-filter.list`** 源采用 [ShellCrash/public/fake_ip_filter.list](https://github.com/juewuy/ShellCrash/blob/dev/public/fake_ip_filter.list)  
 ③ **`fakeip-filter-lite.list`** 源采用 [ShellCrash/public/fake_ip_filter.list](https://github.com/juewuy/ShellCrash/blob/dev/public/fake_ip_filter.list)，仅保留主要域名（推荐搭配 [AdGuard Home](https://github.com/AdguardTeam/AdGuardHome) 且 DNS 配置 mix 混合模式时使用）  

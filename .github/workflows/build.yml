@@ -342,7 +342,7 @@ jobs:
           mv -f ./tmp/temp-apple-cn.list ./domains/apple-cn.list
           
           ##cat ./domains/onedrive ./domains/bing ./domains/copilot | sort --ignore-case -u > ./tmp/exclude.list
-          grep -Fvx -f ./tmp/exclude.list ./domains/microsoft-cn > ./tmp/temp-microsoft-cn.list
+          #grep -Fvx -f ./tmp/exclude.list ./domains/microsoft-cn > ./tmp/temp-microsoft-cn.list
           #mv -f ./tmp/temp-microsoft-cn.list ./domains/microsoft-cn.list
           
           rm -f ./tmp/exclude.list

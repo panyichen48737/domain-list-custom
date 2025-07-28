@@ -341,7 +341,7 @@ jobs:
           awk 'NR==FNR{a[$0]; next} !($0 in a)' ./domains/apple-proxy.list ./domains/apple-cn.list > ./tmp/temp-apple-cn.list
           mv -f ./tmp/temp-apple-cn.list ./domains/apple-cn.list
           
-          cat ./domains/onedrive ./domains/bing ./domains/ai > ./tmp/exclude.list
+          cat ./domains/onedrive.list ./domains/bing.list ./domains/ai.list > ./tmp/exclude.list
           awk 'FNR==NR {a[$0]; next} !($0 in a)' ./tmp/exclude.list ./domains/microsoft-cn > ./tmp/temp-microsoft-cn.list
           mv -f ./tmp/temp-microsoft-cn.list ./domains/microsoft-cn.list
           

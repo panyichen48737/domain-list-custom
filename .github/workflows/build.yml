@@ -127,9 +127,10 @@ jobs:
 
       - name: Generate microsoft-cn
         run: |
-          grep '@cn$' ./publish/microsoft.txt | sed -e 's/full:/DOMAIN,/' -e 's/domain:/DOMAIN-SUFFIX,/' -e 's/keyword:/DOMAIN-KEYWORD,/' -e 's/regexp:/DOMAIN-REGEX,/' -e 's/:@cn$//' | sort --ignore-case > ./domains/microsoft-cn.list
-          curl -sSL ${microsoft} | grep '^DOMAIN-SUFFIX,' | sed 's/DOMAIN-SUFFIX,//' | sort --ignore-case -u >> ./tmp/temp-microsoft-suffix.txt
-          curl -sSL ${microsoft} | grep -Ev '^#|^IP-|^DOMAIN-SUFFIX,' | sort --ignore-case -u >> ./tmp/temp-microsoft-other.txt
+          grep '@cn$' ./publish/microsoft.txt | grep 'domain:' | sed -e 's/domain://' -e 's/:@cn$//' | sort --ignore-case -u > ./tmp/temp-microsoft-cn-suffix.txt
+          grep '@cn$' ./publish/microsoft.txt | grep -v 'domain:' | sed -e 's/full:/DOMAIN,/' -e 's/keyword:/DOMAIN-KEYWORD,/' -e 's/regexp:/DOMAIN-REGEX,/' -e 's/:@cn$//' > ./tmp/temp-microsoft-cn-other.txt
+          #curl -sSL ${microsoft} | grep '^DOMAIN-SUFFIX,' | sed 's/DOMAIN-SUFFIX,//' | sort --ignore-case -u >> ./tmp/temp-microsoft-cn-suffix.txt
+          #curl -sSL ${microsoft} | grep -Ev '^#|^IP-|^DOMAIN-SUFFIX,' | sort --ignore-case -u >> ./tmp/temp-microsoft-cn-other.txt
 
       - name: Generate onedrive
         run: |
@@ -148,9 +149,8 @@ jobs:
 
       - name: Generate apple-cn
         run: |
-          grep 'domain:' ./publish/apple.txt | sed -e 's/domain://' -e 's/:@cn$//' | sort --ignore-case -u > ./tmp/temp-apple-cn-suffix.txt
-
-          grep -v 'domain:' ./publish/apple.txt | sed -e 's/full:/DOMAIN,/' -e 's/keyword:/DOMAIN-KEYWORD,/' -e 's/regexp:/DOMAIN-REGEX,/' -e 's/:@cn$//' > ./tmp/temp-apple-cn-other.txt
+          grep 'domain:' ./publish/apple.txt | sed -e 's/domain://' | sed -E 's/:@(cn|!cn)$//' | sort --ignore-case -u >> ./tmp/temp-apple-cn-suffix.txt
+          grep -v 'domain:' ./publish/apple.txt | sed -e 's/full:/DOMAIN,/' -e 's/keyword:/DOMAIN-KEYWORD,/' -e 's/regexp:/DOMAIN-REGEX,/' | sed -E 's/:@(cn|!cn)$//' >> ./tmp/temp-apple-cn-other.txt
           curl -sSL ${APPLE_DOMAINS_URL} | grep 'server=' | awk -F'/' '{print $2}' | sed 's/^/DOMAIN,/' | sort --ignore-case -u >> ./tmp/temp-apple-cn-other.txt
           curl -sSL ${apple} | grep '^DOMAIN-SUFFIX,' | sed 's/DOMAIN-SUFFIX,//' | sort --ignore-case -u >> ./tmp/temp-apple-cn-suffix.txt
           curl -sSL ${apple} | grep -Ev '^#|^IP-|^DOMAIN-SUFFIX,' | sort --ignore-case -u >> ./tmp/temp-apple-cn-other.txt

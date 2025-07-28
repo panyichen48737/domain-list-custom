@@ -135,6 +135,11 @@ jobs:
         run: |
           curl -sSL ${onedrive} | grep '^DOMAIN-SUFFIX,' | sed 's/DOMAIN-SUFFIX,//' | sort --ignore-case -u >> ./tmp/temp-onedrive-suffix.txt
           curl -sSL ${onedrive} | grep -Ev '^#|^IP-|^DOMAIN-SUFFIX,' | sort --ignore-case -u >> ./tmp/temp-onedrive-other.txt
+
+      - name: Generate bing
+        run: |
+          curl -sSL ${bing} | grep '^DOMAIN-SUFFIX,' | sed 's/DOMAIN-SUFFIX,//' | sort --ignore-case -u >> ./tmp/temp-bing-suffix.txt
+          curl -sSL ${bing} | grep -Ev '^#|^IP-|^DOMAIN-SUFFIX,' | sort --ignore-case -u >> ./tmp/temp-bing-other.txt
           
       - name: Generate appleproxy
         run: |

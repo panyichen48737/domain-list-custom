@@ -342,7 +342,7 @@ jobs:
           mv -f ./tmp/temp-apple-cn.list ./domains/apple-cn.list
           
           cat ./domains/onedrive.list ./domains/bing.list ./domains/ai.list > ./tmp/exclude.list
-          awk 'FNR==NR {a[$0]; next} !($0 in a)' ./tmp/exclude.list ./domains/microsoft-cn > ./tmp/temp-microsoft-cn.list
+          awk 'FNR==NR {a[$0]; next} !($0 in a)' ./tmp/exclude.list ./domains/microsoft-cn.list > ./tmp/temp-microsoft-cn.list
           mv -f ./tmp/temp-microsoft-cn.list ./domains/microsoft-cn.list
           
           rm -f ./tmp/exclude.list

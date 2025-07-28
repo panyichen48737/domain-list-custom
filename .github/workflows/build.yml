@@ -312,11 +312,11 @@ jobs:
       - name: Generate cn
         run: |
           grep 'domain:' ./publish/cn.txt | sed -e 's/domain://' -e 's/:@cn$//' > ./tmp/temp-cn-suffix.txt
-          curl -sSL ${cn1} | grep 'DOMAIN-SUFFIX,' | sed 's/DOMAIN-SUFFIX,//' > ./tmp/temp-cn-suffix.txt
+          curl -sSL ${cn} | grep 'DOMAIN-SUFFIX,' | sed 's/DOMAIN-SUFFIX,//' > ./tmp/temp-cn-suffix.txt
           curl -sSL ${CHINA_DOMAINS_URL} | grep 'server=' | awk -F'/' '{print $2}' | sort --ignore-case -u >> ./tmp/temp-cn-suffix.txt
 
           grep -v 'domain:' ./publish/cn.txt | sed -e 's/full:/DOMAIN,/' -e 's/keyword:/DOMAIN-KEYWORD,/' -e 's/regexp:/DOMAIN-REGEX,/' -e 's/:@cn$//' > ./tmp/temp-cn-other.txt
-          curl -sSL ${cn1} | grep -Ev '#|IP-|DOMAIN-SUFFIX,' | sort --ignore-case -u >> ./tmp/temp-cn-other.txt
+          curl -sSL ${cn} | grep -Ev '#|IP-|DOMAIN-SUFFIX,' | sort --ignore-case -u >> ./tmp/temp-cn-other.txt
 
 
       - name: Domain name deduplication
@@ -342,7 +342,7 @@ jobs:
           mv -f ./tmp/temp-apple-cn.list ./domains/apple-cn.list
           
           cat ./domains/onedrive ./domains/bing ./domains/copilot | sort --ignore-case -u > ./tmp/exclude.list
-          grep -Fvx -f ./tmp/exclude.list ./domains/microsoft-cn > ./tmo/temp-microsoft-cn.list
+          grep -Fvx -f ./tmp/exclude.list ./domains/microsoft-cn > ./tmp/temp-microsoft-cn.list
           mv -f ./tmp/temp-microsoft-cn.list ./domains/microsoft-cn.list
           
           rm -f ./tmp/exclude.list

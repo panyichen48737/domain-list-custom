@@ -335,15 +335,15 @@ jobs:
           done
 
           # Delete `games-cn` from `games`
-          grep -Fvx -f ./domains/games-cn.list ./domains/games.list > ./tmp/temp-games.list
+          awk 'NR==FNR{a[$0]; next} !($0 in a)' ./domains/games-cn.list ./domains/games.list > ./tmp/temp-games.list
           mv -f ./tmp/temp-games.list ./domains/games.list
 
-          grep -Fvx -f ./domains/apple-proxy.list ./domains/apple-cn.list > ./tmp/temp-apple-cn.list
+          awk 'NR==FNR{a[$0]; next} !($0 in a)' ./domains/apple-proxy.list ./domains/apple-cn.list > ./tmp/temp-apple-cn.list
           mv -f ./tmp/temp-apple-cn.list ./domains/apple-cn.list
           
-          ##cat ./domains/onedrive ./domains/bing ./domains/copilot | sort --ignore-case -u > ./tmp/exclude.list
-          #grep -Fvx -f ./tmp/exclude.list ./domains/microsoft-cn > ./tmp/temp-microsoft-cn.list
-          #mv -f ./tmp/temp-microsoft-cn.list ./domains/microsoft-cn.list
+          cat ./domains/onedrive ./domains/bing ./domains/ai > ./tmp/exclude.list
+          awk 'FNR==NR {a[$0]; next} !($0 in a)' ./tmp/exclude.list ./domains/microsoft-cn > ./tmp/temp-microsoft-cn.list
+          mv -f ./tmp/temp-microsoft-cn.list ./domains/microsoft-cn.list
           
           rm -f ./tmp/exclude.list
           rm -rf ./tmp* ./publish*

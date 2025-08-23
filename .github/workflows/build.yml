@@ -451,13 +451,7 @@ jobs:
           git remote add origin "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
           git push -f origin domains
 
-      - name: Purge jsDelivr CDN
-        run: |
-          cd ./domains/ || exit 1
-          for file in $(ls); do
-            curl -i "https://purge.jsdelivr.net/gh/${{ github.repository }}@domains/${file}"
-          done
-
+     
       - name: Delete old workflow runs
         uses: Mattraks/delete-workflow-runs@v2
         with:

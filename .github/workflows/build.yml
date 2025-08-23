@@ -384,11 +384,13 @@ jobs:
         run: |
           cat ./publish/cn.txt | perl -ne '/^(domain):([^:]+)(\n$|:@.+)/ && print "$2\n"' > ./tmp/temp-cn-suffix.txt
           curl -sSL ${cn1} | awk '/^DOMAIN-SUFFIX,/' | sed 's/DOMAIN-SUFFIX,//' >> ./tmp/temp-cn-suffix.txt
+          curl -sSL ${cn} | awk '/^DOMAIN-SUFFIX,/' | sed 's/DOMAIN-SUFFIX,//' >> ./tmp/temp-cn-suffix.txt
           curl -sSL ${cn2} | perl -ne '/server=\/([^\/]+)/ && print "$1\n"' >> ./tmp/temp-cn-suffix.txt
           sort --ignore-case -u ./tmp/temp-cn-suffix.txt > ./tmp/cn-suffix.txt
 
           cat ./publish/cn.txt | perl -ne '/^(full):([^:]+)(\n$|:@.+)/ && print "DOMAIN,$2\n"' > ./tmp/temp-cn-other.txt
           curl -sSL ${cn1} | awk '/^DOMAIN,/' >> ./tmp/temp-cn-other.txt
+          curl -sSL ${cn} | awk '/^DOMAIN,/' >> ./tmp/temp-cn-other.txt
           sort --ignore-case -u ./tmp/temp-cn-other.txt > ./tmp/cn-other.txt
 
       - name: Generate cn-lite
@@ -404,7 +406,7 @@ jobs:
       - name: Remove redundant domains
         run: |
           chmod +x ./tools/*.py ./tools/filter.sh
-          archs=(fakeip-filter private microsoft-cn apple-cn google-cn games-cn netflix disney max primevideo appletv youtube tiktok bilibili spotify games ai networktest tld-proxy proxy cn cn-lite)
+          archs=(fakeip-filter private microsoft-cn bing onedrive appleproxy apple-cn google-cn games-cn netflix disney hbo primevideo appletv youtube tiktok bilibili spotify games ai networktest tld-proxy tld-cn proxy cn cn-lite)
           for arch in "${archs[@]}"; do
             python ./tools/findRedundantDomain.py "./tmp/${arch}-suffix.txt" "./tmp/${arch}-deleted-unsort-suffix.txt"
             [ ! -f "./tmp/${arch}-deleted-unsort-suffix.txt" ] && touch "./tmp/${arch}-deleted-unsort-suffix.txt"

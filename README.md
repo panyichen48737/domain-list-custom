@@ -31,8 +31,8 @@ DOMAIN-SUFFIX,example.com
 ```
 ## 3. 数据源
 ① 每天凌晨 2 点（北京时间 UTC+8）自动构建  
-② **`fakeip-filter.list`** 源采用 [ShellCrash/public/fake_ip_filter.list](https://github.com/juewuy/ShellCrash/blob/dev/public/fake_ip_filter.list)  
-③ **`fakeip-filter-lite.list`** 源采用 [ShellCrash/public/fake_ip_filter.list](https://github.com/juewuy/ShellCrash/blob/dev/public/fake_ip_filter.list)，仅保留主要域名（推荐搭配 [AdGuard Home](https://github.com/AdguardTeam/AdGuardHome) 且 DNS 配置 mix 混合模式时使用）  
+② **`fakeip-filter.list`** 源采用 [v2fly/domain-list-community/category-ntp](https://github.com/v2fly/domain-list-community/blob/master/data/category-ntp)、[v2fly/domain-list-community/category-stun](https://github.com/v2fly/domain-list-community/blob/master/data/category-stun) 和 [ShellCrash/public/fake_ip_filter.list](https://github.com/juewuy/ShellCrash/blob/dev/public/fake_ip_filter.list) 组合  
+③ **`fakeip-filter-lite.list`** 源采用 [v2fly/domain-list-community/category-ntp](https://github.com/v2fly/domain-list-community/blob/master/data/category-ntp) 和 [v2fly/domain-list-community/category-stun](https://github.com/v2fly/domain-list-community/blob/master/data/category-stun) 组合（推荐搭配 [AdGuard Home](https://github.com/AdguardTeam/AdGuardHome) 且 DNS 配置 mix 混合模式时使用）  
 ④ **`ads.list`** 源采用 [privacy-protection-tools/anti-AD](https://github.com/privacy-protection-tools/anti-AD)  
 ⑤ **`private.list`** 源采用 [v2fly/domain-list-community/private](https://github.com/v2fly/domain-list-community/blob/master/data/private) 和 [blackmatrix7/ios_rule_script/Lan](https://github.com/blackmatrix7/ios_rule_script/tree/master/rule/Clash/Lan)（仅域名）组合，并添加主流 [Dashboard 在线面板](https://github.com/DustinWin/proxy-tools/releases/tag/Dashboard)域名（`yacd.metacubex.one`、`metacubex.github.io`、`metacubexd.pages.dev`、`zephyruso.github.io`、`board.zash.run.place`、`dash.sing-box.app` 和 `sing-box-dashboard.sagernet.org`）  
 ⑥ **`trackerslist.list`** 源采用 [XIU2/TrackersListCollection](https://github.com/XIU2/TrackersListCollection/blob/master/all.txt)（仅域名）和 [ngosang/trackerslist](https://github.com/ngosang/trackerslist/blob/master/trackers_all.txt) 组合  

@@ -196,26 +196,32 @@ jobs:
 
       - name: Generate `fakeip-filter`
         run: |
-          curl -fsSL "${fakeip_filter}" | perl -ne '/^[\+\*]\.([^\*]+)\n$/ && print "$1\n"' | sort --ignore-case > ./tmp/fakeip-filter-suffix.txt
+          cat ./publish/category-ntp.txt | perl -ne '/^(domain):([^:]+)(\n$|:\@.+)/ && print "$2\n"' > ./tmp/temp-fakeip-filter-suffix.txt
+          cat ./publish/category-stun.txt | perl -ne '/^(domain):([^:]+)(\n$|:\@.+)/ && print "$2\n"' >> ./tmp/temp-fakeip-filter-suffix.txt
+          curl -fsSL "${fakeip_filter}" | perl -ne '/^[\+\*]\.([^\*]+)\n$/ && print "$1\n"' >> ./tmp/temp-fakeip-filter-suffix.txt
+          sort --ignore-case -u ./tmp/temp-fakeip-filter-suffix.txt > ./tmp/fakeip-filter-suffix.txt
 
-          curl -fsSL "${fakeip_filter}" | awk '!/[#+* ]/' | sed 's/^/DOMAIN,/' > ./tmp/temp-fakeip-filter-other.txt
-          curl -fsSL "${fakeip_filter}" | awk '/\*/ && !/#/ && !/\./' | sed -e 's/\*/\[\^\.\]\+/g' -e 's/^/DOMAIN-REGEX,\^/; s/$/\$/' >> ./tmp/temp-fakeip-filter-other.txt
-          curl -fsSL "${fakeip_filter}" | awk '!/#/ && (/\.\*/ || / /)' | sed -e 's/ /\\s/g' -e 's/\./\\./g' -e 's/\*/\[\^\.\]\+/g' -e 's/^\+/\.\*/' -e 's/^/DOMAIN-REGEX,\^/; s/$/\$/' >> ./tmp/temp-fakeip-filter-other.txt
-          sort --ignore-case ./tmp/temp-fakeip-filter-other.txt > ./tmp/fakeip-filter-other.txt
+          cat ./publish/category-ntp.txt | perl -ne '/^(full):([^:]+)(\n$|:\@.+)/ && print "DOMAIN,$2\n"' > ./tmp/temp-fakeip-filter-other.txt
+          cat ./publish/category-stun.txt | perl -ne '/^(full):([^:]+)(\n$|:\@.+)/ && print "DOMAIN,$2\n"' >> ./tmp/temp-fakeip-filter-other.txt
+          curl -fsSL "${fakeip_filter}" | awk '!/[#+* ]|ntp|stun|time/' | sed 's/^/DOMAIN,/' >> ./tmp/temp-fakeip-filter-other.txt
+          sort --ignore-case -u ./tmp/temp-fakeip-filter-other.txt > ./tmp/fakeip-filter-other.txt
 
       - name: Generate `fakeip-filter-lite`
         run: |
-          cat <<EOF > ./tmp/temp-fakeip-filter-lite.txt
+          cat ./publish/category-ntp.txt | perl -ne '/^(domain):([^:]+)(\n$|:\@.+)/ && print "$2\n"' > ./tmp/temp-fakeip-filter-lite-suffix.txt
+          cat ./publish/category-stun.txt | perl -ne '/^(domain):([^:]+)(\n$|:\@.+)/ && print "$2\n"' >> ./tmp/temp-fakeip-filter-lite-suffix.txt
+          sort --ignore-case -u ./tmp/temp-fakeip-filter-lite-suffix.txt > ./tmp/fakeip-filter-lite-suffix.txt
+
+          cat <<EOF > ./tmp/temp-fakeip-filter-lite-other.txt
           DOMAIN,adguardteam.github.io
           DOMAIN,adrules.top
           DOMAIN,anti-ad.net
           DOMAIN,local.adguard.org
           DOMAIN,static.adtidy.org
           EOF
-          curl -fsSL "${fakeip_filter}" | awk '!/[#+* ]/ && /(ntp|stun|time)/' | sed 's/^/DOMAIN,/' >> ./tmp/temp-fakeip-filter-lite.txt
-          curl -fsSL "${fakeip_filter}" | awk '/(ntp|stun|time)/' | perl -ne '/^[\+\*]\.([^\*]+)\n$/ && print "DOMAIN-SUFFIX,$1\n"' >> ./tmp/temp-fakeip-filter-lite.txt
-          curl -fsSL "${fakeip_filter}" | awk '/(ntp|stun|time)/ && /\.\*/' | sed -e 's/\./\\./g' -e 's/\*/\[\^\.\]\+/g' -e 's/^\+/\.\*/' -e 's/^/DOMAIN-REGEX,\^/; s/$/\$/' >> ./tmp/temp-fakeip-filter-lite.txt
-          sort --ignore-case ./tmp/temp-fakeip-filter-lite.txt > ./domains/fakeip-filter-lite.list
+          cat ./publish/category-ntp.txt | perl -ne '/^(full):([^:]+)(\n$|:\@.+)/ && print "DOMAIN,$2\n"' >> ./tmp/temp-fakeip-filter-lite-other.txt
+          cat ./publish/category-stun.txt | perl -ne '/^(full):([^:]+)(\n$|:\@.+)/ && print "DOMAIN,$2\n"' >> ./tmp/temp-fakeip-filter-lite-other.txt
+          sort --ignore-case -u ./tmp/temp-fakeip-filter-lite-other.txt > ./tmp/fakeip-filter-lite-other.txt
 
       - name: Generate `ads`
         run: |
@@ -239,7 +245,6 @@ jobs:
           cat ./publish/private.txt | perl -ne '/^(full):([^:]+)(\n$|:\@.+)/ && print "DOMAIN,$2\n"' >> ./tmp/temp-private-other.txt
           cat ./publish/private.txt | perl -ne '/^(keyword):([^:]+)(\n$|:\@.+)/ && print "DOMAIN-KEYWORD,$2\n"' >> ./tmp/temp-private-other.txt
           curl -fsSL "${private}" | awk '/(DOMAIN,|DOMAIN-KEYWORD,)/' >> ./tmp/temp-private-other.txt
-          echo "DOMAIN-REGEX,^[^.]+$" >> ./tmp/temp-private-other.txt
           sort --ignore-case -u ./tmp/temp-private-other.txt > ./tmp/private-other.txt
 
       - name: Generate `trackerslist`
@@ -530,7 +535,7 @@ jobs:
 
       - name: Remove redundant domains
         run: |
-          archs=(fakeip-filter private microsoft-cn apple-cn google-cn games-cn games netflix disney max primevideo appletv youtube tiktok bilibili spotify media ai networktest tld-proxy proxy cn cn-lite)
+          archs=(fakeip-filter fakeip-filter-lite private microsoft-cn apple-cn google-cn games-cn games netflix disney max primevideo appletv youtube tiktok bilibili spotify media ai networktest tld-proxy proxy cn cn-lite)
           for arch in "${archs[@]}"; do
             python ./tools/findRedundantDomain.py "./tmp/${arch}-suffix.txt" "./tmp/${arch}-deleted-unsort-suffix.txt"
             [ ! -f "./tmp/${arch}-deleted-unsort-suffix.txt" ] && touch "./tmp/${arch}-deleted-unsort-suffix.txt"

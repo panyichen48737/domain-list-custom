@@ -8,6 +8,11 @@ on:
       - master
     paths-ignore:
       - "**/README.md"
+
+permissions:
+  contents: write
+  actions: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -55,21 +60,21 @@ jobs:
         shell: bash
 
       - name: Checkout codebase
-        uses: actions/checkout@master
+        uses: actions/checkout@v7
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version-file: ./go.mod
 
       - name: Checkout v2fly/domain-list-community
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: v2fly/domain-list-community
           path: community
 
       - name: Checkout cokebar/gfwlist2dnsmasq
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           repository: cokebar/gfwlist2dnsmasq
           path: gfwlist2dnsmasq
@@ -341,6 +346,7 @@ jobs:
       - name: Generate networktest
         run: |
           cat ./publish/category-speedtest.txt | perl -ne '/^(domain):([^:]+)(\n$|:@.+)/ && print "$2\n"' > ./tmp/temp-networktest-suffix.txt
+          cat ./publish/category-ip-geo-detect.txt | perl -ne '/^(domain):([^:]+)(\n$|:@.+)/ && print "$2\n"' >> ./tmp/temp-networktest-suffix.txt
           curl -sSL ${networktest} | awk '/^DOMAIN-SUFFIX,/' | sed 's/DOMAIN-SUFFIX,//' >> ./tmp/temp-networktest-suffix.txt
           sort --ignore-case -u ./tmp/temp-networktest-suffix.txt > ./tmp/networktest-suffix.txt
 
@@ -352,6 +358,8 @@ jobs:
           EOF
           cat ./publish/category-speedtest.txt | perl -ne '/^(full):([^:]+)(\n$|:@.+)/ && print "DOMAIN,$2\n"' >> ./tmp/temp-networktest-other.txt
           cat ./publish/category-speedtest.txt | perl -ne '/^(keyword):([^:]+)(\n$|:@.+)/ && print "DOMAIN-KEYWORD,$2\n"' >> ./tmp/temp-networktest-other.txt
+          cat ./publish/category-ip-geo-detect.txt | perl -ne '/^(full):([^:]+)(\n$|:@.+)/ && print "DOMAIN,$2\n"' >> ./tmp/temp-networktest-other.txt
+          cat ./publish/category-ip-geo-detect.txt | perl -ne '/^(keyword):([^:]+)(\n$|:@.+)/ && print "DOMAIN-KEYWORD,$2\n"' >> ./tmp/temp-networktest-other.txt
           curl -sSL ${networktest} | awk '/^DOMAIN,|^DOMAIN-KEYWORD,/' >> ./tmp/temp-networktest-other.txt
           sort --ignore-case -u ./tmp/temp-networktest-other.txt > ./tmp/networktest-other.txt
 

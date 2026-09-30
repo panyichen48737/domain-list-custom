@@ -5,7 +5,8 @@ permissions:
 
 on:
   schedule:
-    - cron: "0 0 * * *"
+    - cron: "0 8 * * *"
+      timezone: "Asia/Shanghai"
   workflow_dispatch:
 
 jobs:
@@ -15,14 +16,14 @@ jobs:
     if: ${{ github.event.repository.fork }}
     steps:
       - name: Checkout target repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Sync upstream changes
         id: sync
-        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
+        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.3
         with:
-          upstream_sync_repo: Loyalsoldier/domain-list-custom
-          upstream_sync_branch: master
+          upstream_sync_repo: DustinWin/domain-list-custom
+          upstream_sync_branch: main
           target_sync_branch: master
           target_repo_token: ${{ secrets.GITHUB_TOKEN }}
           test_mode: false

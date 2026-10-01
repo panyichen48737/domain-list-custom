@@ -108,6 +108,10 @@ jobs:
         with:
           repository: cokebar/gfwlist2dnsmasq
           path: gfwlist2dnsmasq
+          # This checkout exists only to be executed, never to push. The default
+          # `true` would leave GITHUB_TOKEN in its .git/config, inside a job
+          # that holds `contents: write`.
+          persist-credentials: false
 
       # Every upstream file is fetched here, once, into ./tmp/src and the steps
       # below read the local copy. Two reasons:
@@ -221,8 +225,8 @@ jobs:
           DOMAIN,yacd.metacubex.one
           EOF
           cat ./publish/private.txt | perl -ne '/^(full):([^:]+)(\n$|:@.+)/ && print "DOMAIN,$2\n"' >> ./tmp/temp-private-other.txt
+          cat ./publish/private.txt | perl -ne '/^(regexp):(.+?)(\n$|:@.+)/ && print "DOMAIN-REGEX,$2\n"' >> ./tmp/temp-private-other.txt
           cat ./tmp/src/private | awk '/^DOMAIN,/' >> ./tmp/temp-private-other.txt
-          echo "DOMAIN-REGEX,^[^.]+$" >> ./tmp/temp-private-other.txt
           sort --ignore-case -u ./tmp/temp-private-other.txt > ./tmp/private-other.txt
 
       
@@ -277,6 +281,10 @@ jobs:
           cat ./publish/google.txt | perl -ne '/^(domain):([^:]+):@cn/ && print "$2\n"' > ./tmp/google-cn-suffix.txt
 
           cat ./publish/google.txt | perl -ne '/^(full):([^:]+):@cn/ && print "DOMAIN,$2\n"' > ./tmp/temp-google-cn-other.txt
+          # `.+?` rather than the `[^:]+` used for `domain` and `full` above: a
+          # regular expression may contain a colon, and the character class
+          # would cut the value at the first one.
+          cat ./publish/google.txt | perl -ne '/^(regexp):(.+?):@cn/ && print "DOMAIN-REGEX,$2\n"' >> ./tmp/temp-google-cn-other.txt
           cat ./tmp/src/google_cn | perl -ne '/server=\/([^\/]+)/ && print "DOMAIN,$1\n"' >> ./tmp/temp-google-cn-other.txt
           sort --ignore-case -u ./tmp/temp-google-cn-other.txt > ./tmp/google-cn-other.txt
 
@@ -293,6 +301,7 @@ jobs:
           cat ./publish/category-game-accelerator-cn.txt | perl -ne '/^(full):([^:]+)(\n$|:@.+)/ && print "DOMAIN,$2\n"' > ./tmp/temp-games-cn-other.txt
           cat ./publish/category-game-platforms-download.txt | perl -ne '/^(full):([^:]+):@cn/ && print "DOMAIN,$2\n"' >> ./tmp/temp-games-cn-other.txt
           cat ./publish/category-games-cn.txt | perl -ne '/^(full):([^:]+)(\n$|:@.+)/ && print "DOMAIN,$2\n"' >> ./tmp/temp-games-cn-other.txt
+          cat ./publish/category-games-cn.txt | perl -ne '/^(regexp):(.+?)(\n$|:@.+)/ && print "DOMAIN-REGEX,$2\n"' >> ./tmp/temp-games-cn-other.txt
           cat ./tmp/src/games_cn1 | awk '/^DOMAIN,/' >> ./tmp/temp-games-cn-other.txt
           cat ./tmp/src/games_cn2 | awk '/^DOMAIN,/' >> ./tmp/temp-games-cn-other.txt
           cat ./tmp/src/games_cn3 | awk '/^DOMAIN,/' >> ./tmp/temp-games-cn-other.txt
@@ -305,6 +314,7 @@ jobs:
           sort --ignore-case -u ./tmp/temp-netflix-suffix.txt > ./tmp/netflix-suffix.txt
 
           cat ./publish/netflix.txt | perl -ne '/^(full):([^:]+)(\n$|:@.+)/ && print "DOMAIN,$2\n"' > ./tmp/temp-netflix-other.txt
+          cat ./publish/netflix.txt | perl -ne '/^(regexp):(.+?)(\n$|:@.+)/ && print "DOMAIN-REGEX,$2\n"' >> ./tmp/temp-netflix-other.txt
           cat ./tmp/src/netflix | awk '/^DOMAIN,/' >> ./tmp/temp-netflix-other.txt
           sort --ignore-case -u ./tmp/temp-netflix-other.txt > ./tmp/netflix-other.txt
 
@@ -315,6 +325,7 @@ jobs:
           sort --ignore-case -u ./tmp/temp-disney-suffix.txt > ./tmp/disney-suffix.txt
 
           cat ./publish/disney.txt | perl -ne '/^(full):([^:]+)(\n$|:@.+)/ && print "DOMAIN,$2\n"' > ./tmp/temp-disney-other.txt
+          cat ./publish/disney.txt | perl -ne '/^(regexp):(.+?)(\n$|:@.+)/ && print "DOMAIN-REGEX,$2\n"' >> ./tmp/temp-disney-other.txt
           cat ./tmp/src/disney | awk '/^DOMAIN,/' >> ./tmp/temp-disney-other.txt
           sort --ignore-case -u ./tmp/temp-disney-other.txt > ./tmp/disney-other.txt
 
@@ -487,6 +498,7 @@ jobs:
           sort --ignore-case -u ./tmp/temp-cn-suffix.txt > ./tmp/cn-suffix.txt
 
           cat ./publish/cn.txt | perl -ne '/^(full):([^:]+)(\n$|:@.+)/ && print "DOMAIN,$2\n"' > ./tmp/temp-cn-other.txt
+          cat ./publish/cn.txt | perl -ne '/^(regexp):(.+?)(\n$|:@.+)/ && print "DOMAIN-REGEX,$2\n"' >> ./tmp/temp-cn-other.txt
           cat ./tmp/src/cn1 | awk '/^DOMAIN,/' >> ./tmp/temp-cn-other.txt
           cat ./tmp/src/cn | awk '/^DOMAIN,/' >> ./tmp/temp-cn-other.txt
           sort --ignore-case -u ./tmp/temp-cn-other.txt > ./tmp/cn-other.txt
@@ -498,6 +510,7 @@ jobs:
           sort --ignore-case -u ./tmp/temp-cn-lite-suffix.txt > ./tmp/cn-lite-suffix.txt
 
           cat ./publish/cn.txt | perl -ne '/^(full):([^:]+)(\n$|:@.+)/ && print "DOMAIN,$2\n"' > ./tmp/temp-cn-lite-other.txt
+          cat ./publish/cn.txt | perl -ne '/^(regexp):(.+?)(\n$|:@.+)/ && print "DOMAIN-REGEX,$2\n"' >> ./tmp/temp-cn-lite-other.txt
           cat ./tmp/src/cn1 | awk '/^DOMAIN,/' >> ./tmp/temp-cn-lite-other.txt
           sort --ignore-case -u ./tmp/temp-cn-lite-other.txt > ./tmp/cn-lite-other.txt
 

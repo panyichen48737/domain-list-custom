@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import sys
-print(sys.argv[1], sys.argv[2])
 
 ''' Find redundant items in domain lists.
     e.g. 'bar.foo.com' is redundant for 'foo.com'.

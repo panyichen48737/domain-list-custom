@@ -502,8 +502,32 @@ jobs:
           sort --ignore-case -u ./tmp/temp-proxy-suffix.txt > ./tmp/proxy-suffix.txt
 
           cat ./publish/geolocation-\!cn.txt | perl -ne '/^(full):([^:]+)(\n$|:@.+)/ && print "DOMAIN,$2\n"' > ./tmp/temp-proxy-other.txt
+          cat ./publish/geolocation-\!cn.txt | perl -ne '/^(regexp):(.+?)(\n$|:@.+)/ && print "DOMAIN-REGEX,$2\n"' >> ./tmp/temp-proxy-other.txt
           cat ./tmp/src/proxy | awk '/^DOMAIN,/' >> ./tmp/temp-proxy-other.txt
-          sort --ignore-case -u ./tmp/temp-proxy-other.txt > ./tmp/proxy-other.txt
+
+          # Ten of the 151 patterns are dropped because `cn` and `cn-lite`, both
+          # matched after `proxy`, already cover what they match, so taking them
+          # would move those hosts off the direct route. `[a-z][1-9][0-9][a-z]
+          # \.com$` matches 33 of the 36 `cn` entries involved (`uuu9.com`,
+          # `y80s.com`, `u17i.com` and the rest), `mimi[0-9]{3}` matches one
+          # (`mimi518.com`) and `uu[a-z][1-9][0-9]?` two (`uus8.com`,
+          # `uuu9.com`). `[1-9]+aipai` sits under the `aipai.com` suffix and the
+          # six `.top` patterns under the dotless `top` suffix; `cn` and
+          # `cn-lite` hold both. The other 141 patterns match nothing in either
+          # list.
+          cat <<'EOF' > ./tmp/proxy-regexp-drop.txt
+          DOMAIN-REGEX,(^|\.)[a-z][1-9][0-9][a-z]\.com$
+          DOMAIN-REGEX,(^|\.)mimi[0-9]{3}\.com$
+          DOMAIN-REGEX,(^|\.)uu[a-z][1-9][0-9]?\.com$
+          DOMAIN-REGEX,(^|\.)[1-9]+aipai\.(com|net)$
+          DOMAIN-REGEX,(^|\.)awwcn[1-9]?\.top$
+          DOMAIN-REGEX,(^|\.)llyysp[0-9]{4}\.top$
+          DOMAIN-REGEX,(^|\.)loibus(100|101|202|505|606)\.top$
+          DOMAIN-REGEX,(^|\.)xv[0-9]{4}\.top$
+          DOMAIN-REGEX,(^|\.)zy[0-9]{4}\.top$
+          DOMAIN-REGEX,(^|\.)zzz[1-9][0-9]\.top$
+          EOF
+          sort --ignore-case -u ./tmp/temp-proxy-other.txt | grep -Fvx -f ./tmp/proxy-regexp-drop.txt > ./tmp/proxy-other.txt
 
       - name: Generate cn
         run: |

@@ -593,9 +593,12 @@ jobs:
         id: compare
         run: |
           published="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/domains"
-          # A list that loses more than this share of its lines is treated as
-          # broken. Raise it if upstream ever drops a large source on purpose.
+          # A list that loses, or gains, more than this share of its lines is
+          # treated as broken: a large drop means a source or a step produced
+          # nothing, a large jump means one started matching far too much.
+          # Raise them if upstream ever changes a source size on purpose.
           max_shrink_percent=50
+          max_grow_percent=50
           workdir=$(mktemp -d)
           broken=0
 
@@ -624,6 +627,11 @@ jobs:
             floor=$(( old_lines * (100 - max_shrink_percent) / 100 ))
             if [ "$new_lines" -lt "$floor" ]; then
               echo "::error file=domains/${name}::${name} shrank from ${old_lines} to ${new_lines} lines, over ${max_shrink_percent}%"
+              broken=1
+            fi
+            ceiling=$(( old_lines * (100 + max_grow_percent) / 100 ))
+            if [ "$new_lines" -gt "$ceiling" ]; then
+              echo "::error file=domains/${name}::${name} grew from ${old_lines} to ${new_lines} lines, over ${max_grow_percent}%"
               broken=1
             fi
             echo "${name}: ${old_lines} -> ${new_lines} lines"
@@ -660,7 +668,7 @@ jobs:
           tag: domains
           overwrite: true
           body: |
-            供下游项目 [DustinWin/ruleset_geodata](https://github.com/DustinWin/ruleset_geodata) 使用的 DOMAIN 数据源文件
+            供下游项目 [panyichen48737/ruleset_geodata](https://github.com/panyichen48737/ruleset_geodata) 使用的 DOMAIN 数据源文件
             文件更新于 ${{ env.update_version }}
           file_glob: true
           file: ./domains/*

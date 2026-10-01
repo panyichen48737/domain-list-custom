@@ -231,3 +231,54 @@ func TestMissingIncludeTargetIsReported(t *testing.T) {
 		t.Errorf("error should name the missing target, got: %v", err)
 	}
 }
+
+// A rule value may itself contain colons, as a regexp matching a URL does. Split
+// on every colon left neither branch of parseTypeRule matching and dropped the
+// rule from the output without a word.
+func TestRuleValueWithColonsIsKept(t *testing.T) {
+	lm := writeListInfoMap(t, map[string]string{
+		"regex": "regexp:^https?://ads\\.example\\.com\n",
+	})
+	flatten(t, lm)
+
+	got := plainRules(t, lm["REGEX"])
+	want := []string{`regexp:^https?://ads\.example\.com`}
+	if !slices.Equal(got, want) {
+		t.Errorf("regex rule = %v, want %v", got, want)
+	}
+}
+
+// A tab between a rule and its attribute separates them just like a space, so
+// the attribute is parsed rather than glued onto the end of the value.
+func TestRuleSeparatedByTabKeepsAttribute(t *testing.T) {
+	lm := writeListInfoMap(t, map[string]string{
+		"tabbed": "domain:tabbed.com\t@cn\n",
+	})
+	flatten(t, lm)
+
+	got := plainRules(t, lm["TABBED"])
+	want := []string{"domain:tabbed.com:@cn"}
+	if !slices.Equal(got, want) {
+		t.Errorf("tab-separated rule = %v, want %v", got, want)
+	}
+}
+
+// An attribute written without a name on a rule line is rejected, the same way
+// the include side rejects it, instead of emitting a rule that no filter selects.
+func TestRuleWithEmptyAttributeIsRejected(t *testing.T) {
+	for _, line := range []string{
+		"domain:emptyattr.com @",
+		"domain:emptyattr.com @cn @",
+	} {
+		t.Run(line, func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), "list")
+			if err := os.WriteFile(path, []byte(line+"\n"), 0644); err != nil {
+				t.Fatalf("writing list: %v", err)
+			}
+			lm := make(ListInfoMap)
+			if err := lm.Marshal(path); err == nil {
+				t.Fatalf("%q was accepted, want an error", line)
+			}
+		})
+	}
+}

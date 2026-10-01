@@ -53,9 +53,15 @@ func main() {
 			exFilenameAttr = strings.TrimSpace(exFilenameAttr)
 			exFilenameAttrMap := strings.Split(exFilenameAttr, "@")
 			filename := fileName(strings.ToUpper(strings.TrimSpace(exFilenameAttrMap[0])))
-			excludeAttrsInFile[filename] = make(map[attribute]bool)
+			// Only on first sight of this list: a second `cn@...` entry adds to
+			// what the first one asked for instead of replacing it.
+			if _, seen := excludeAttrsInFile[filename]; !seen {
+				excludeAttrsInFile[filename] = make(map[attribute]bool)
+			}
 			for _, attr := range exFilenameAttrMap[1:] {
-				attr = strings.TrimSpace(attr)
+				// Lowercased to match the attribute keys built when parsing the
+				// rules, so `cn@ADS` excludes the same rules as `cn@ads`.
+				attr = strings.ToLower(strings.TrimSpace(attr))
 				if len(attr) > 0 {
 					excludeAttrsInFile[filename][attribute(attr)] = true
 				}

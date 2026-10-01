@@ -96,7 +96,9 @@ func (l *ListInfo) parseRule(line string) (*router.Domain, error) {
 		return nil, l.parseInclusion(line)
 	}
 
-	parts := strings.Split(line, " ")
+	// Fields, not Split(" "): a tab between the rule and its attributes would
+	// otherwise stay glued to the rule and turn `@cn` into part of the value.
+	parts := strings.Fields(line)
 	ruleWithType := strings.TrimSpace(parts[0])
 	if ruleWithType == "" {
 		return nil, errors.New("empty rule")
@@ -152,7 +154,10 @@ func (l *ListInfo) parseInclusion(inclusion string) error {
 }
 
 func (l *ListInfo) parseTypeRule(domain string, rule *router.Domain) error {
-	kv := strings.Split(domain, ":")
+	// SplitN, not Split: a regexp value may itself contain colons, as in
+	// `regexp:^https?://example\.com`, and splitting on every one of them used
+	// to leave neither branch below matching, silently dropping the rule.
+	kv := strings.SplitN(domain, ":", 2)
 	switch len(kv) {
 	case 1: // line without type prefix
 		rule.Type = router.Domain_RootDomain
@@ -182,10 +187,16 @@ func (l *ListInfo) parseAttribute(attr string) (*router.Domain_Attribute, error)
 	if attr[0] != '@' {
 		return nil, errors.New("invalid attribute: " + attr)
 	}
-	attr = attr[1:] // Trim out attribute prefix `@` character
+	// Trim out attribute prefix `@` character. An attribute with no name, as in
+	// `domain:example.com @`, is rejected for the same reason the include side
+	// rejects it: it produces a rule that no include filter can select.
+	key := strings.ToLower(strings.TrimSpace(attr[1:]))
+	if key == "" {
+		return nil, errors.New("invalid attribute: " + attr)
+	}
 
 	var attribute router.Domain_Attribute
-	attribute.Key = strings.ToLower(attr)
+	attribute.Key = key
 	attribute.TypedValue = &router.Domain_Attribute_BoolValue{BoolValue: true}
 	return &attribute, nil
 }

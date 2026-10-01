@@ -28,7 +28,12 @@ concurrency:
 # `pipefail` is deliberately NOT set: the steps below pipe into `grep`, and a
 # `grep` that matches no line exits 1, which is a normal outcome here rather
 # than an error. (The Bing list, for one, is nothing but comments and
-# DOMAIN-SUFFIX lines, so its `grep -Ev` always exits 1 today.) The case that
+# DOMAIN-SUFFIX lines, so its `grep -Ev` always exits 1 today.) That is only
+# true while the `grep` is not the last command in the pipeline: without
+# `pipefail` the step's status is the last command's, so `... | grep -Ev ...`
+# fails the step on a no-match while `... | grep -Ev ... | sort` does not.
+# Write `cat X | grep -Ev PATTERN > out` and a source that yields nothing
+# kills the build; use `awk '!/PATTERN/'` there instead. The case that
 # genuinely must fail loudly - an upstream download returning 404 - is handled
 # by `curl -f` in the "Download upstream sources" step.
 defaults:
@@ -420,11 +425,17 @@ jobs:
           # Keep the process and keyword rules, not just the exact hosts:
           # `awk '/^DOMAIN,/'` would drop the four keywords below that are
           # wanted (`roblox`, `steambroadcast`, `steamstore` and
-          # `steamuserimages`).
-          cat ./tmp/src/games1 | grep -Ev '^#|^IP-|^DOMAIN-SUFFIX,' > ./tmp/games-with-cn-other-unsort.txt
-          cat ./tmp/src/games2 | grep -Ev '^#|^IP-|^DOMAIN-SUFFIX,' >> ./tmp/games-with-cn-other-unsort.txt
-          cat ./tmp/src/games3 | grep -Ev '^#|^IP-|^DOMAIN-SUFFIX,' >> ./tmp/games-with-cn-other-unsort.txt
-          cat ./tmp/src/games4 | grep -Ev '^#|^IP-|^DOMAIN-SUFFIX,' >> ./tmp/games-with-cn-other-unsort.txt
+          # `steamuserimages`). The filter is a negated `awk` rather than the
+          # `grep -Ev` the other catch-alls use, because those always have a
+          # `sort` after the `grep` while these lines end the pipeline, and a
+          # `grep` that matches nothing exits 1: `games1` and `games3` are
+          # comments, `DOMAIN-SUFFIX` and one IP rule only, so they match
+          # nothing, and `-e` would fail the step. `awk` exits 0 with no
+          # output and produces the same lines otherwise.
+          cat ./tmp/src/games1 | awk '!/^(#|IP-|DOMAIN-SUFFIX,)/' > ./tmp/games-with-cn-other-unsort.txt
+          cat ./tmp/src/games2 | awk '!/^(#|IP-|DOMAIN-SUFFIX,)/' >> ./tmp/games-with-cn-other-unsort.txt
+          cat ./tmp/src/games3 | awk '!/^(#|IP-|DOMAIN-SUFFIX,)/' >> ./tmp/games-with-cn-other-unsort.txt
+          cat ./tmp/src/games4 | awk '!/^(#|IP-|DOMAIN-SUFFIX,)/' >> ./tmp/games-with-cn-other-unsort.txt
           sort --ignore-case -u ./tmp/games-with-cn-other-unsort.txt > ./tmp/games-with-cn-other.txt
 
           # `games.list` is matched before `cn` and `cn-lite`, so a keyword here
@@ -448,12 +459,13 @@ jobs:
 
           cat ./publish/category-ai-\!cn.txt | perl -ne '/^(full):([^:]+)(\n$|:@.+)/ && print "DOMAIN,$2\n"' > ./tmp/temp-ai-other.txt
           # Same as the games step: keep the process and keyword rules rather
-          # than only the exact hosts.
-          cat ./tmp/src/ai | grep -Ev '^#|^IP-|^DOMAIN-SUFFIX,' >> ./tmp/temp-ai-other.txt
-          cat ./tmp/src/ai1 | grep -Ev '^#|^IP-|^DOMAIN-SUFFIX,' >> ./tmp/temp-ai-other.txt
-          cat ./tmp/src/ai2 | grep -Ev '^#|^IP-|^DOMAIN-SUFFIX,' >> ./tmp/temp-ai-other.txt
-          cat ./tmp/src/ai3 | grep -Ev '^#|^IP-|^DOMAIN-SUFFIX,' >> ./tmp/temp-ai-other.txt
-          cat ./tmp/src/ai4 | grep -Ev '^#|^IP-|^DOMAIN-SUFFIX,' >> ./tmp/temp-ai-other.txt
+          # than only the exact hosts, and for the same reason use a negated
+          # `awk` rather than a `grep` that ends the pipeline.
+          cat ./tmp/src/ai | awk '!/^(#|IP-|DOMAIN-SUFFIX,)/' >> ./tmp/temp-ai-other.txt
+          cat ./tmp/src/ai1 | awk '!/^(#|IP-|DOMAIN-SUFFIX,)/' >> ./tmp/temp-ai-other.txt
+          cat ./tmp/src/ai2 | awk '!/^(#|IP-|DOMAIN-SUFFIX,)/' >> ./tmp/temp-ai-other.txt
+          cat ./tmp/src/ai3 | awk '!/^(#|IP-|DOMAIN-SUFFIX,)/' >> ./tmp/temp-ai-other.txt
+          cat ./tmp/src/ai4 | awk '!/^(#|IP-|DOMAIN-SUFFIX,)/' >> ./tmp/temp-ai-other.txt
           # `ai.list` also precedes `cn`, so `openai` and `colab` are dropped
           # for the same reason: they would take `openailab.com`,
           # `openai-hub.com`, `openai.wf` and `rcolab.com` off the direct

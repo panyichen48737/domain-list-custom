@@ -261,12 +261,14 @@ jobs:
           cat ./publish/apple.txt | perl -ne '/^(full):([^:]+):@cn/ && print "DOMAIN,$2\n"' > ./tmp/temp-apple-cn-other.txt
           cat ./tmp/src/apple_cn | perl -ne '/server=\/([^\/]+)/ && print "DOMAIN,$1\n"' >> ./tmp/temp-apple-cn-other.txt
 
-          # Only the process and keyword rules are taken from the Apple list.
-          # Its domain rules describe everything that mentions Apple rather than
-          # what is reachable from China, so they would put the counterfeit
-          # Beats shops it carries and the global suffixes `apple.com` and
-          # `icloud.com` into a list whose job is direct access, where those
-          # suffixes would swallow `apple-proxy` instead of losing to it.
+          # The Apple list contributes its process, keyword and exact-host
+          # (`DOMAIN`) rules; its `DOMAIN-SUFFIX` rules are left out. Those
+          # describe everything that mentions Apple rather than what is
+          # reachable from China, and the global `apple.com` and `icloud.com`
+          # suffixes would swallow `apple-proxy` instead of losing to it. Note
+          # that taking the `DOMAIN` rules wholesale also brings in the one or
+          # two entries there that are not Apple's at all, such as the
+          # `beatselectronicsllc` tracker.
           cat ./tmp/src/apple | grep -Ev '^#|^IP-|^DOMAIN-SUFFIX,' | sort --ignore-case -u >> ./tmp/temp-apple-cn-other.txt
           sort --ignore-case -u ./tmp/temp-apple-cn-other.txt > ./tmp/apple-cn-other.txt
 
@@ -599,6 +601,9 @@ jobs:
           # Raise them if upstream ever changes a source size on purpose.
           max_shrink_percent=50
           max_grow_percent=50
+          # Below this size the percentages are noise: half of an 8-line list is
+          # 4 lines, which upstream adds or drops without anything being wrong.
+          min_lines=50
           workdir=$(mktemp -d)
           broken=0
 
@@ -625,12 +630,12 @@ jobs:
             fi
 
             floor=$(( old_lines * (100 - max_shrink_percent) / 100 ))
-            if [ "$new_lines" -lt "$floor" ]; then
+            if [ "$old_lines" -ge "$min_lines" ] && [ "$new_lines" -lt "$floor" ]; then
               echo "::error file=domains/${name}::${name} shrank from ${old_lines} to ${new_lines} lines, over ${max_shrink_percent}%"
               broken=1
             fi
             ceiling=$(( old_lines * (100 + max_grow_percent) / 100 ))
-            if [ "$new_lines" -gt "$ceiling" ]; then
+            if [ "$old_lines" -ge "$min_lines" ] && [ "$new_lines" -gt "$ceiling" ]; then
               echo "::error file=domains/${name}::${name} grew from ${old_lines} to ${new_lines} lines, over ${max_grow_percent}%"
               broken=1
             fi

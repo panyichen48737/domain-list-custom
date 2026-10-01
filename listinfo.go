@@ -10,13 +10,26 @@ import (
 	router "github.com/v2fly/v2ray-core/v5/app/router/routercommon"
 )
 
+// includeRule is a single `include:` line: the source file it pulls in together
+// with the attribute constraints written on that same line.
+// `include:x @cn`        -> must = ["@cn"],  ban = []
+// `include:x @-!cn`      -> must = [],       ban = ["@!cn"] (upstream fn syntax:
+//                           take everything that does NOT carry `!cn`)
+// `include:x @cn @-ads`  -> must = ["@cn"],  ban = ["@ads"]
+// Constraints of one line are combined, they are not applied one after another.
+type includeRule struct {
+	source fileName
+	must   []attribute
+	ban    []attribute
+}
+
 // ListInfo is the information structure of a single file in data directory.
 // It includes all types of rules of the file, as well as servel types of
 // sturctures of same items for convenience in later process.
 type ListInfo struct {
 	Name                    fileName
 	HasInclusion            bool
-	InclusionAttributeMap   map[fileName][]attribute
+	Inclusions              []includeRule
 	FullTypeList            []*router.Domain
 	KeywordTypeList         []*router.Domain
 	RegexpTypeList          []*router.Domain
@@ -30,7 +43,6 @@ type ListInfo struct {
 // NewListInfo return a ListInfo
 func NewListInfo() *ListInfo {
 	return &ListInfo{
-		InclusionAttributeMap:   make(map[fileName][]attribute),
 		FullTypeList:            make([]*router.Domain, 0, 10),
 		KeywordTypeList:         make([]*router.Domain, 0, 10),
 		RegexpTypeList:          make([]*router.Domain, 0, 10),
@@ -81,8 +93,7 @@ func (l *ListInfo) parseRule(line string) (*router.Domain, error) {
 
 	// Parse `include` rule first, eg: `include:google`, `include:google @cn @gfw`
 	if strings.HasPrefix(line, "include:") {
-		l.parseInclusion(line)
-		return nil, nil
+		return nil, l.parseInclusion(line)
 	}
 
 	parts := strings.Split(line, " ")
@@ -109,25 +120,35 @@ func (l *ListInfo) parseRule(line string) (*router.Domain, error) {
 	return &rule, nil
 }
 
-func (l *ListInfo) parseInclusion(inclusion string) {
+func (l *ListInfo) parseInclusion(inclusion string) error {
 	inclusionVal := strings.TrimPrefix(strings.TrimSpace(inclusion), "include:")
 	l.HasInclusion = true
 	inclusionValSlice := strings.Split(inclusionVal, "@")
-	filename := fileName(strings.ToUpper(strings.TrimSpace(inclusionValSlice[0])))
-	switch len(inclusionValSlice) {
-	case 1: // Inclusion without attribute
-		// Use '@' as the placeholder attribute for 'include:filename'
-		l.InclusionAttributeMap[filename] = append(l.InclusionAttributeMap[filename], attribute("@"))
-	default: // Inclusion with attribute(s)
-		// support new inclusion syntax, eg: `include:google @cn @gfw`
-		for _, attr := range inclusionValSlice[1:] {
-			attr = strings.ToLower(strings.TrimSpace(attr))
-			if attr != "" {
-				// Added in this format: '@cn'
-				l.InclusionAttributeMap[filename] = append(l.InclusionAttributeMap[filename], attribute("@"+attr))
+	inc := includeRule{source: fileName(strings.ToUpper(strings.TrimSpace(inclusionValSlice[0])))}
+	// support new inclusion syntax, eg: `include:google @cn @gfw`
+	// and the ban syntax used upstream, eg: `include:tencent @-!cn`
+	//
+	// An attribute with no name, as in `include:child @` or `include:child @-`,
+	// is rejected rather than ignored: ignoring it leaves a rule with neither a
+	// wanted nor a banned attribute, which is the "take everything" form of the
+	// line and would silently widen the include to the whole child list.
+	for _, attr := range inclusionValSlice[1:] {
+		attr = strings.ToLower(strings.TrimSpace(attr))
+		if ban, isBan := strings.CutPrefix(attr, "-"); isBan {
+			if ban = strings.TrimSpace(ban); ban == "" {
+				return errors.New("invalid ban attribute in inclusion: " + inclusion)
 			}
+			inc.ban = append(inc.ban, attribute("@"+ban))
+			continue
 		}
+		if attr == "" {
+			return errors.New("invalid attribute in inclusion: " + inclusion)
+		}
+		// Added in this format: '@cn'
+		inc.must = append(inc.must, attribute("@"+attr))
 	}
+	l.Inclusions = append(l.Inclusions, inc)
+	return nil
 }
 
 func (l *ListInfo) parseTypeRule(domain string, rule *router.Domain) error {
@@ -173,10 +194,7 @@ func (l *ListInfo) parseAttribute(attr string) (*router.Domain_Attribute, error)
 func (l *ListInfo) classifyRule(rule *router.Domain) {
 	if len(rule.Attribute) > 0 {
 		l.AttributeRuleUniqueList = append(l.AttributeRuleUniqueList, rule)
-		var attrsString attribute
-		for _, attr := range rule.Attribute {
-			attrsString += attribute("@" + attr.GetKey()) // attrsString will be "@cn@ads" if there are more than one attributes
-		}
+		attrsString := attributesKey(rule) // attrsString will be "@cn@ads" if there are more than one attributes
 		l.AttributeRuleListMap[attrsString] = append(l.AttributeRuleListMap[attrsString], rule)
 	} else {
 		switch rule.Type {
@@ -199,42 +217,20 @@ func (l *ListInfo) classifyRule(rule *router.Domain) {
 // to remove duplications of them.
 func (l *ListInfo) Flatten(lm *ListInfoMap) error {
 	if l.HasInclusion {
-		for filename, attrs := range l.InclusionAttributeMap {
-			for _, attrWanted := range attrs {
-				includedList := (*lm)[filename]
-				switch string(attrWanted) {
-				case "@":
-					l.FullTypeList = append(l.FullTypeList, includedList.FullTypeList...)
-					l.DomainTypeList = append(l.DomainTypeList, includedList.DomainTypeList...)
-					l.KeywordTypeList = append(l.KeywordTypeList, includedList.KeywordTypeList...)
-					l.RegexpTypeList = append(l.RegexpTypeList, includedList.RegexpTypeList...)
-					l.AttributeRuleUniqueList = append(l.AttributeRuleUniqueList, includedList.AttributeRuleUniqueList...)
-					for attr, domainList := range includedList.AttributeRuleListMap {
-						l.AttributeRuleListMap[attr] = append(l.AttributeRuleListMap[attr], domainList...)
-					}
-
-				default:
-					for attr, domainList := range includedList.AttributeRuleListMap {
-						// If there are more than one attribute attached to the rule,
-						// the attribute key of AttributeRuleListMap in ListInfo
-						// will be like: "@cn@ads".
-						// So if to extract rules with a specific attribute, it is necessary
-						// also to test the multi-attribute keys of AttributeRuleListMap.
-						// Notice: if "include:google @cn" and "include:google @ads" appear
-						// at the same time in the parent list. There are chances that the same
-						// rule with that two attributes(`@cn` and `@ads`) will be included twice in the parent list.
-						if strings.Contains(string(attr)+"@", string(attrWanted)+"@") {
-							l.AttributeRuleListMap[attr] = append(l.AttributeRuleListMap[attr], domainList...)
-							l.AttributeRuleUniqueList = append(l.AttributeRuleUniqueList, domainList...)
-						}
-					}
-				}
+		for _, inc := range l.Inclusions {
+			includedList := (*lm)[inc.source]
+			if len(inc.must) == 0 && len(inc.ban) == 0 {
+				l.includeAll(includedList)
+			} else {
+				l.includeSelecting(includedList, inc.must, inc.ban)
 			}
 		}
 	}
 
+	// Ascending label count, so a parent suffix always reaches the trie before
+	// the subdomains it is meant to swallow.
 	sort.Slice(l.DomainTypeList, func(i, j int) bool {
-		return len(strings.Split(l.DomainTypeList[i].GetValue(), ".")) < len(strings.Split(l.DomainTypeList[j].GetValue(), "."))
+		return strings.Count(l.DomainTypeList[i].GetValue(), ".") < strings.Count(l.DomainTypeList[j].GetValue(), ".")
 	})
 
 	trie := NewDomainTrie()
@@ -249,6 +245,92 @@ func (l *ListInfo) Flatten(lm *ListInfoMap) error {
 	}
 
 	return nil
+}
+
+// includeAll implements `include:filename`: take every rule of the included list.
+func (l *ListInfo) includeAll(includedList *ListInfo) {
+	l.FullTypeList = append(l.FullTypeList, includedList.FullTypeList...)
+	l.DomainTypeList = append(l.DomainTypeList, includedList.DomainTypeList...)
+	l.KeywordTypeList = append(l.KeywordTypeList, includedList.KeywordTypeList...)
+	l.RegexpTypeList = append(l.RegexpTypeList, includedList.RegexpTypeList...)
+	l.AttributeRuleUniqueList = append(l.AttributeRuleUniqueList, includedList.AttributeRuleUniqueList...)
+	for attr, domainList := range includedList.AttributeRuleListMap {
+		l.AttributeRuleListMap[attr] = append(l.AttributeRuleListMap[attr], domainList...)
+	}
+}
+
+// includeSelecting implements an include line that carries attributes, covering
+// both `include:x @cn` and the upstream `include:x @-!cn` form. A rule qualifies
+// when it carries none of the banned attributes and all of the wanted ones,
+// which is what upstream v2fly's isMatchAttrFilters does with MustAttrs.
+// Notice: a rule can be taken by more than one include line, in which case it
+// lands in the lists below once per line. That is harmless here, because every
+// list this program publishes goes through `sort --ignore-case -u` in build.yml
+// before it is written to the `domains` branch.
+func (l *ListInfo) includeSelecting(includedList *ListInfo, must []attribute, ban []attribute) {
+	// Rules carrying no attribute at all qualify only when no wanted attribute
+	// was given: `include:x @-!cn` takes them, `include:x @cn` does not.
+	if len(must) == 0 {
+		l.FullTypeList = append(l.FullTypeList, includedList.FullTypeList...)
+		l.DomainTypeList = append(l.DomainTypeList, includedList.DomainTypeList...)
+		l.KeywordTypeList = append(l.KeywordTypeList, includedList.KeywordTypeList...)
+		l.RegexpTypeList = append(l.RegexpTypeList, includedList.RegexpTypeList...)
+	}
+
+	for _, rule := range includedList.AttributeRuleUniqueList {
+		if hasAnyAttribute(rule, ban) {
+			continue
+		}
+		if !hasAllAttributes(rule, must) {
+			continue
+		}
+		l.AttributeRuleUniqueList = append(l.AttributeRuleUniqueList, rule)
+		attrsString := attributesKey(rule)
+		l.AttributeRuleListMap[attrsString] = append(l.AttributeRuleListMap[attrsString], rule)
+	}
+}
+
+// hasAttribute reports whether the rule carries the given attribute, which is
+// written in the key form, eg. "@!cn".
+func hasAttribute(rule *router.Domain, attrWanted attribute) bool {
+	for _, attr := range rule.GetAttribute() {
+		if attribute("@"+attr.GetKey()) == attrWanted {
+			return true
+		}
+	}
+	return false
+}
+
+// hasAnyAttribute reports whether the rule carries at least one of the given
+// attributes.
+func hasAnyAttribute(rule *router.Domain, attrWanted []attribute) bool {
+	for _, attr := range attrWanted {
+		if hasAttribute(rule, attr) {
+			return true
+		}
+	}
+	return false
+}
+
+// hasAllAttributes reports whether the rule carries every one of the given
+// attributes. An empty list is satisfied by every rule.
+func hasAllAttributes(rule *router.Domain, attrWanted []attribute) bool {
+	for _, attr := range attrWanted {
+		if !hasAttribute(rule, attr) {
+			return false
+		}
+	}
+	return true
+}
+
+// attributesKey joins the attributes of a rule into the key used by
+// AttributeRuleListMap, eg. "@cn@ads".
+func attributesKey(rule *router.Domain) attribute {
+	var attrsString attribute
+	for _, attr := range rule.GetAttribute() {
+		attrsString += attribute("@" + attr.GetKey())
+	}
+	return attrsString
 }
 
 // ToGeoSite converts every ListInfo into a router.GeoSite structure.

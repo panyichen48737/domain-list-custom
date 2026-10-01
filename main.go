@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	dataPath     = flag.String("datapath", filepath.Join("./", "data"), "Path to your custom 'data' directory")
+	dataPath     = flag.String("datapath", "", "Path to your custom 'data' directory, empty means the default lookup described in GetDataDir")
 	datName      = flag.String("datname", "geosite.dat", "Name of the generated dat file")
 	outputPath   = flag.String("outputpath", "./publish", "Output path to the generated files")
 	exportLists  = flag.String("exportlists", "category-ntp,category-stun,private,microsoft,apple,google,category-enhance-gaming,category-game-accelerator-cn,category-game-platforms-download,category-games-cn,category-games-!cn,netflix,disney,hbo,primevideo,apple-tvplus,youtube,tiktok,bilibili,spotify,category-ai-!cn,test-ipv6,category-speedtest,category-ip-geo-detect,tld-!cn,tld-cn,geolocation-!cn,geolocation-cn,cn", "Lists to be exported in plaintext format, separated by ',' comma")

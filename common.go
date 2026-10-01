@@ -70,7 +70,12 @@ func GetRuntimeEnv(key string) (string, error) {
 	envStrings := strings.Split(string(data), "\n")
 	for _, envItem := range envStrings {
 		envItem = strings.TrimSuffix(envItem, "\r")
-		envKeyValue := strings.Split(envItem, "=")
+		// SplitN so a value containing '=' is kept intact, and so a line
+		// without '=' is skipped instead of indexing out of range.
+		envKeyValue := strings.SplitN(envItem, "=", 2)
+		if len(envKeyValue) != 2 {
+			continue
+		}
 		if strings.EqualFold(strings.TrimSpace(envKeyValue[0]), key) {
 			runtimeEnv = strings.TrimSpace(envKeyValue[1])
 		}

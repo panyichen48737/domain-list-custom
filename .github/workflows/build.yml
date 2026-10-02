@@ -759,6 +759,24 @@ jobs:
           git push -f origin domains
 
      
+      # 数据真的变了才通知 ruleset_geodata 重建（与上面的分支推送同一条件），
+      # 免得每天空唤醒它跑一轮。需要 secret DISPATCH_TOKEN（对 ruleset_geodata 有
+      # Contents 读写，或 classic PAT 的 repo 权限）；没配置就只提示、不影响本仓库构建。
+      - name: Notify `ruleset_geodata`
+        if: steps.compare.outputs.unchanged != 'true' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+        env:
+          TOKEN: ${{ secrets.DISPATCH_TOKEN }}
+        run: |
+          if [ -z "${TOKEN}" ]; then
+            echo "::notice::未配置 DISPATCH_TOKEN，跳过通知 ruleset_geodata"
+            exit 0
+          fi
+          curl -fsSL --retry 3 --retry-delay 5 -X POST \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/panyichen48737/ruleset_geodata/dispatches" \
+            -d '{"event_type":"data-updated"}'
+
       - name: Delete old workflow runs
         uses: Mattraks/delete-workflow-runs@v2
         with:

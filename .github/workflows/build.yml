@@ -771,11 +771,14 @@ jobs:
             echo "::notice::未配置 DISPATCH_TOKEN，跳过通知 ruleset_geodata"
             exit 0
           fi
-          curl -fsSL --retry 3 --retry-delay 5 -X POST \
+          # 通知失败（token 过期/权限不足）不该把数据管线的构建弄红。
+          if ! curl -fsSL --max-time 60 --retry 3 --retry-delay 5 -X POST \
             -H "Authorization: Bearer ${TOKEN}" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/panyichen48737/ruleset_geodata/dispatches" \
-            -d '{"event_type":"data-updated"}'
+            -d '{"event_type":"data-updated"}'; then
+            echo "::warning::通知 ruleset_geodata 失败（token 可能已过期或权限不足），本轮构建不受影响"
+          fi
 
       - name: Delete old workflow runs
         uses: Mattraks/delete-workflow-runs@v2

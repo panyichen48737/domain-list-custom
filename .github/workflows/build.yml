@@ -438,12 +438,12 @@ jobs:
           cat ./tmp/src/games4 | awk '!/^(#|IP-|DOMAIN-SUFFIX,)/' >> ./tmp/games-with-cn-other-unsort.txt
           sort --ignore-case -u ./tmp/games-with-cn-other-unsort.txt > ./tmp/games-with-cn-other.txt
 
-          # `games.list` is matched before `cn` and `cn-lite`, so a keyword here
-          # wins over their exact rules. `epicgames` would take the two `@cn`
-          # regexes for Epic's China CDN (`^cdn\d-epicgames-\d+\.file\.myqcloud
+          # `games.list` is matched before `cn`, so a keyword here wins over
+          # its exact rules. `epicgames` would take the two `@cn` regexes for
+          # Epic's China CDN (`^cdn\d-epicgames-\d+\.file\.myqcloud
           # \.com$` and `^epicgames-download\d-\d+\.file\.myqcloud\.com$`) off
           # the direct route, so it is left out. No other keyword here matches
-          # either list.
+          # that list.
           grep -Ev '^DOMAIN-KEYWORD,epicgames$' ./tmp/games-with-cn-other.txt >> ./tmp/temp-games-other.txt
           sort --ignore-case -u ./tmp/temp-games-other.txt > ./tmp/games-other.txt
 
@@ -517,16 +517,15 @@ jobs:
           cat ./publish/geolocation-\!cn.txt | perl -ne '/^(regexp):(.+?)(\n$|:@.+)/ && print "DOMAIN-REGEX,$2\n"' >> ./tmp/temp-proxy-other.txt
           cat ./tmp/src/proxy | awk '/^DOMAIN,/' >> ./tmp/temp-proxy-other.txt
 
-          # Ten of the 151 patterns are dropped because `cn` and `cn-lite`, both
-          # matched after `proxy`, already cover what they match, so taking them
-          # would move those hosts off the direct route. `[a-z][1-9][0-9][a-z]
+          # Ten of the 151 patterns are dropped because `cn`, which is matched
+          # after `proxy`, already covers what they match, so taking them would
+          # move those hosts off the direct route. `[a-z][1-9][0-9][a-z]
           # \.com$` matches 33 of the 36 `cn` entries involved (`uuu9.com`,
           # `y80s.com`, `u17i.com` and the rest), `mimi[0-9]{3}` matches one
           # (`mimi518.com`) and `uu[a-z][1-9][0-9]?` two (`uus8.com`,
           # `uuu9.com`). `[1-9]+aipai` sits under the `aipai.com` suffix and the
-          # six `.top` patterns under the dotless `top` suffix; `cn` and
-          # `cn-lite` hold both. The other 141 patterns match nothing in either
-          # list.
+          # six `.top` patterns under the dotless `top` suffix; `cn` holds
+          # both. The other 141 patterns match nothing in that list.
           cat <<'EOF' > ./tmp/proxy-regexp-drop.txt
           DOMAIN-REGEX,(^|\.)[a-z][1-9][0-9][a-z]\.com$
           DOMAIN-REGEX,(^|\.)mimi[0-9]{3}\.com$
@@ -555,21 +554,10 @@ jobs:
           cat ./tmp/src/cn | awk '/^DOMAIN,/' >> ./tmp/temp-cn-other.txt
           sort --ignore-case -u ./tmp/temp-cn-other.txt > ./tmp/cn-other.txt
 
-      - name: Generate cn-lite
-        run: |
-          cat ./publish/cn.txt | perl -ne '/^(domain):([^:]+)(\n$|:@.+)/ && print "$2\n"' > ./tmp/temp-cn-lite-suffix.txt
-          cat ./tmp/src/cn1 | awk '/^DOMAIN-SUFFIX,/' | sed 's/DOMAIN-SUFFIX,//' >> ./tmp/temp-cn-lite-suffix.txt
-          sort --ignore-case -u ./tmp/temp-cn-lite-suffix.txt > ./tmp/cn-lite-suffix.txt
-
-          cat ./publish/cn.txt | perl -ne '/^(full):([^:]+)(\n$|:@.+)/ && print "DOMAIN,$2\n"' > ./tmp/temp-cn-lite-other.txt
-          cat ./publish/cn.txt | perl -ne '/^(regexp):(.+?)(\n$|:@.+)/ && print "DOMAIN-REGEX,$2\n"' >> ./tmp/temp-cn-lite-other.txt
-          cat ./tmp/src/cn1 | awk '/^DOMAIN,/' >> ./tmp/temp-cn-lite-other.txt
-          sort --ignore-case -u ./tmp/temp-cn-lite-other.txt > ./tmp/cn-lite-other.txt
-
       - name: Remove redundant domains
         run: |
           chmod +x ./tools/*.py ./tools/filter.sh
-          archs=(fakeip-filter private microsoft-cn bing onedrive apple-proxy apple-cn google-cn games-cn netflix disney hbo primevideo appletv youtube tiktok bilibili spotify games ai networktest tld-proxy tld-cn proxy cn cn-lite)
+          archs=(fakeip-filter private microsoft-cn bing onedrive apple-proxy apple-cn google-cn games-cn netflix disney hbo primevideo appletv youtube tiktok bilibili spotify games ai networktest tld-proxy tld-cn proxy cn)
           for arch in "${archs[@]}"; do
             python ./tools/findRedundantDomain.py "./tmp/${arch}-suffix.txt" "./tmp/${arch}-deleted-unsort-suffix.txt"
             [ ! -f "./tmp/${arch}-deleted-unsort-suffix.txt" ] && touch "./tmp/${arch}-deleted-unsort-suffix.txt"
@@ -584,18 +572,13 @@ jobs:
           # `proxy` and `cn` are the two base lists, one sending its domains
           # through the proxy and the other direct, so a rule they share is
           # decided by whichever of the two a config happens to order first.
-          # The catch-all `cn` and `cn-lite` give up every rule `proxy` also
-          # has. Only word-for-word equal rules are dropped: both sides are
-          # built from their own sources, and where those sources disagree
-          # about a domain beyond the shared one, that is a disagreement about
-          # the domain itself rather than something to settle here.
-          excludes=(proxy:cn proxy:cn-lite)
-          for pair in "${excludes[@]}"; do
-            from=${pair%%:*}
-            to=${pair##*:}
-            awk 'NR==FNR{a[$0]; next} !($0 in a)' "./domains/${from}.list" "./domains/${to}.list" > "./tmp/temp-${to}.list"
-            mv -f "./tmp/temp-${to}.list" "./domains/${to}.list"
-          done
+          # The catch-all `cn` gives up every rule `proxy` also has. Only
+          # word-for-word equal rules are dropped: both sides are built from
+          # their own sources, and where those sources disagree about a domain
+          # beyond the shared one, that is a disagreement about the domain
+          # itself rather than something to settle here.
+          awk 'NR==FNR{a[$0]; next} !($0 in a)' ./domains/proxy.list ./domains/cn.list > ./tmp/temp-cn.list
+          mv -f ./tmp/temp-cn.list ./domains/cn.list
 
           # `games` is the proxy list and `games-cn` the direct one, so a game
           # they both carry would be sent whichever way the config orders them.

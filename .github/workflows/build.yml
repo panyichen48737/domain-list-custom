@@ -668,7 +668,9 @@ jobs:
               continue
             fi
 
-            if curl -fsSL --max-time 60 "$published/${name}" -o "${workdir}/previous" 2>/dev/null; then
+            # `--retry`：取不到就只是跳过守卫，一次网络抖动不该让守卫静默失效（geoip 的同类
+            # 检查早就这么做了）。3 次机会之后才认输，那时才真的按「没有已发布副本」处理。
+            if curl -fsSL --retry 3 --retry-delay 5 --max-time 60 "$published/${name}" -o "${workdir}/previous" 2>/dev/null; then
               old_lines=$(wc -l < "${workdir}/previous")
             else
               # First run, a list that was just added, or the branch is not
@@ -703,7 +705,7 @@ jobs:
 
           # Empty when the file is not on the branch yet, which compares unequal
           # below and so lets the push run.
-          previous=$(curl -fsSL --max-time 60 "$published/.content-sha256" 2>/dev/null | tr -d '[:space:]')
+          previous=$(curl -fsSL --retry 3 --retry-delay 5 --max-time 60 "$published/.content-sha256" 2>/dev/null | tr -d '[:space:]')
 
           if [ -n "$previous" ] && [ "$previous" = "$hash" ]; then
             echo "unchanged=true" >> "$GITHUB_OUTPUT"

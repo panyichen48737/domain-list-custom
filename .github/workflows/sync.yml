@@ -4,9 +4,12 @@ permissions:
   contents: write
 
 on:
-  schedule:
-    - cron: "0 8 * * *"
-      timezone: "Asia/Shanghai"
+  # 本仓库的 build.yml / tools 相对上游深度定制（27 个列表、games 的覆盖相减、cn 的逐字
+  # 相减等），自动 merge 会把上游对这些文件的改动直接带进来——其中无冲突标记的那些不会
+  # 报错、只会静默覆盖。因此取消定时同步，改为需要时手动触发，合并前先 review。
+  # 注意这条 sync 只带代码：build.yml 的数据源全部是运行时从第三方 raw 拉的
+  # （blackmatrix7 / felixonmars / XIU2 …），从不读 DustinWin/domain-list-custom，
+  # 所以取消定时不会让任何列表数据变旧。
   workflow_dispatch:
 
 jobs:

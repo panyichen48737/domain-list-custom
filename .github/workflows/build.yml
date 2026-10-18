@@ -2,7 +2,8 @@ name: Build domains
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 18 * * *"
+    # 避开整点：GitHub 的 schedule 在整点高负载时会被延迟，负载再高还会直接丢弃
+    - cron: "17 18 * * *"
   push:
     branches:
       - master

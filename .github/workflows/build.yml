@@ -685,9 +685,16 @@ jobs:
               echo "::error file=domains/${name}::${name} shrank from ${old_lines} to ${new_lines} lines, over ${max_shrink_percent}%"
               broken=1
             fi
-            ceiling=$(( old_lines * (100 + max_grow_percent) / 100 ))
+            # 2026-10-20 上游 v2fly/domain-list-community 给 category-ip-geo-detect
+            # 批量加了 IP 检测站/镜像/API（#4151），networktest 一步从 321 涨到
+            # 2014，属于有意的扩张；这条单独放宽，其余列表仍按 50% 守。
+            grow_limit=$max_grow_percent
+            if [ "$name" = "networktest.list" ]; then
+              grow_limit=600
+            fi
+            ceiling=$(( old_lines * (100 + grow_limit) / 100 ))
             if [ "$old_lines" -ge "$min_lines" ] && [ "$new_lines" -gt "$ceiling" ]; then
-              echo "::error file=domains/${name}::${name} grew from ${old_lines} to ${new_lines} lines, over ${max_grow_percent}%"
+              echo "::error file=domains/${name}::${name} grew from ${old_lines} to ${new_lines} lines, over ${grow_limit}%"
               broken=1
             fi
             echo "${name}: ${old_lines} -> ${new_lines} lines"

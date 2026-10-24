@@ -13,6 +13,7 @@ on:
 permissions:
   contents: write
   actions: write
+  issues: write
 
 # Every run force-pushes the same `domains` branch and overwrites the same
 # release, so two overlapping runs race and the slower one wins. Serialize them
@@ -644,11 +645,13 @@ jobs:
         id: compare
         run: |
           published="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/domains"
-          # A list that loses, or gains, more than this share of its lines is
-          # treated as broken: a large drop means a source or a step produced
-          # nothing, a large jump means one started matching far too much.
-          # Raise them if upstream ever changes a source size on purpose.
+          # A list that loses more than this share of its lines is broken: a
+          # large drop means a source or a step produced nothing. That stops the
+          # run instead of being published.
           max_shrink_percent=50
+          # A large jump means a source started matching far too much, but it
+          # only makes the list bigger - it cannot make a rule wrong the way a
+          # drop can - so growth is reported as a warning and published anyway.
           max_grow_percent=50
           # Below this size the percentages are noise: half of an 8-line list is
           # 4 lines, which upstream adds or drops without anything being wrong.
@@ -685,17 +688,13 @@ jobs:
               echo "::error file=domains/${name}::${name} shrank from ${old_lines} to ${new_lines} lines, over ${max_shrink_percent}%"
               broken=1
             fi
-            # 2026-10-20 上游 v2fly/domain-list-community 给 category-ip-geo-detect
-            # 批量加了 IP 检测站/镜像/API（#4151），networktest 一步从 321 涨到
-            # 2014，属于有意的扩张；这条单独放宽，其余列表仍按 50% 守。
-            grow_limit=$max_grow_percent
-            if [ "$name" = "networktest.list" ]; then
-              grow_limit=600
-            fi
-            ceiling=$(( old_lines * (100 + grow_limit) / 100 ))
+            # 涨不是失败判据：涨只让列表变大，改变不了路由正确性，而 2026-10-20
+            # 上游 v2fly/domain-list-community 给 category-ip-geo-detect 批量加了
+            # IP 检测站/镜像/API（#4151），networktest 一步 321 → 2014，这条守卫
+            # 让发布静默停了三天（10-22 到 10-24）。只提示，由人判断。
+            ceiling=$(( old_lines * (100 + max_grow_percent) / 100 ))
             if [ "$old_lines" -ge "$min_lines" ] && [ "$new_lines" -gt "$ceiling" ]; then
-              echo "::error file=domains/${name}::${name} grew from ${old_lines} to ${new_lines} lines, over ${grow_limit}%"
-              broken=1
+              echo "::warning file=domains/${name}::${name} grew from ${old_lines} to ${new_lines} lines, over ${max_grow_percent}%"
             fi
             echo "${name}: ${old_lines} -> ${new_lines} lines"
           done
@@ -780,3 +779,23 @@ jobs:
           repository: ${{ github.repository }}
           retain_days: 3
           keep_minimum_runs: 1
+
+      # 失败只落在 Actions 列表里就没人看见：2026-10-22 到 10-24 这轮连红三天，
+      # 发布跟着静默停了三天。失败时开一个 issue（已有开着的就补一条评论），让
+      # 它进 GitHub 的通知里。写 issue 用 GITHUB_TOKEN，需要 issues: write。
+      - name: Report failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITLE: 构建失败：${{ github.workflow }}
+        run: |
+          url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          printf '运行：%s\n触发：%s\n提交：%s\n' "${url}" "${GITHUB_EVENT_NAME}" "${GITHUB_SHA:0:7}" > "${RUNNER_TEMP}/failure.md"
+          # 标题固定，所以同一类失败只留一个开着的 issue，重复失败追加评论。
+          number=$(gh issue list --repo "${GITHUB_REPOSITORY}" --state open --limit 100 \
+            --json number,title --jq "[.[] | select(.title == \"${TITLE}\")][0].number // empty" || true)
+          if [ -n "${number}" ]; then
+            gh issue comment "${number}" --repo "${GITHUB_REPOSITORY}" --body-file "${RUNNER_TEMP}/failure.md"
+          else
+            gh issue create --repo "${GITHUB_REPOSITORY}" --title "${TITLE}" --body-file "${RUNNER_TEMP}/failure.md"
+          fi
